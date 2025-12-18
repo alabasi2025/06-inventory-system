@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
 
 @Component({
-  imports: [RouterModule],
   selector: 'app-root',
-  template: '<router-outlet></router-outlet>',
-  styles: []
+  standalone: false,
+  templateUrl: './app.html',
+  styleUrl: './app.scss',
 })
 export class App {
-  protected title = 'نظام إدارة المخزون والمشتريات';
+  protected title = 'web';
 }

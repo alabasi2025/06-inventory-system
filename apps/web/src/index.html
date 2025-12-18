@@ -1,13 +1,46 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <title>web</title>
+    <title>نظام المخزون</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <style>
+      #error-container {
+        display: none;
+        padding: 20px;
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+        margin: 20px;
+        font-family: monospace;
+        direction: ltr;
+      }
+    </style>
   </head>
   <body>
-    <app-root></app-root>
+    <div id="error-container"></div>
+    <app-root>
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        جاري تحميل النظام...
+      </div>
+    </app-root>
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        var container = document.getElementById('error-container');
+        container.style.display = 'block';
+        container.innerHTML += '<div><strong>Error:</strong> ' + msg + '<br>' +
+          '<strong>File:</strong> ' + url + ':' + line + ':' + col + '<br>' +
+          '<strong>Stack:</strong> ' + (error && error.stack ? error.stack : 'N/A') + '</div><hr>';
+        return false;
+      };
+      
+      window.addEventListener('unhandledrejection', function(event) {
+        var container = document.getElementById('error-container');
+        container.style.display = 'block';
+        container.innerHTML += '<div><strong>Promise Rejection:</strong> ' + event.reason + '</div><hr>';
+      });
+    </script>
   </body>
 </html>
