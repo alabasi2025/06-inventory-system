@@ -13,6 +13,7 @@ import { PurchaseOrdersModule } from '../purchase-orders/purchase-orders.module'
 import { DashboardModule } from '../dashboard/dashboard.module';
 import { HealthModule } from '../health/health.module';
 import { GrnModule } from '../grn/grn.module';
+import { PurchaseInvoicesModule } from '../purchase-invoices/purchase-invoices.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { GrnModule } from '../grn/grn.module';
     DashboardModule,
     HealthModule,
     GrnModule,
+    PurchaseInvoicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

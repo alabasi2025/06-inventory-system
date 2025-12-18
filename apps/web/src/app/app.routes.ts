@@ -43,6 +43,10 @@ export const appRoutes: Route[] = [
         path: 'grn', 
         loadComponent: () => import('./features/grn/grn.component').then(m => m.GrnComponent) 
       },
+      { 
+        path: 'purchase-invoices', 
+        loadComponent: () => import('./features/purchase-invoices/purchase-invoices.component').then(m => m.PurchaseInvoicesComponent) 
+      },
     ]
   },
   { path: '**', redirectTo: 'dashboard' }

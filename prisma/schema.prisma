@@ -102,6 +102,7 @@ model InvItem {
   poItems       InvPurchaseOrderItem[]
   prItems       InvPurchaseRequestItem[]
   grnItems      InvGrnItem[]
+  invoiceItems   InvPurchaseInvoiceItem[]
   
   @@map("inv_items")
 }
@@ -157,6 +158,8 @@ model InvSupplier {
   
   contracts      InvSupplierContract[]
   purchaseOrders InvPurchaseOrder[]
+  invoices       InvPurchaseInvoice[]
+  payments       InvSupplierPayment[]
   grns           InvGoodsReceivedNote[] @relation("SupplierGRNs")
   
   @@map("inv_suppliers")
@@ -304,6 +307,7 @@ model InvPurchaseOrder {
   
   supplier      InvSupplier @relation(fields: [supplierId], references: [id])
   items         InvPurchaseOrderItem[]
+  invoices       InvPurchaseInvoice[]
   
   @@map("inv_purchase_orders")
 }
@@ -364,6 +368,7 @@ model InvGoodsReceivedNote {
   supplier            InvSupplier @relation("SupplierGRNs", fields: [supplierId], references: [id])
   warehouse           InvWarehouse @relation("WarehouseGRNs", fields: [warehouseId], references: [id])
   items               InvGrnItem[]
+  invoices       InvPurchaseInvoice[]
   
   @@map("inv_goods_received_notes")
 }
@@ -401,4 +406,109 @@ model InvGrnItem {
   unit              InvUnit @relation("GrnItemUnit", fields: [unitId], references: [id])
   
   @@map("inv_grn_items")
+}
+
+// ═══════════════════════════════════════════════════
+// فواتير المشتريات - Purchase Invoices
+// ═══════════════════════════════════════════════════
+model InvPurchaseInvoice {
+  id                    String   @id @default(uuid())
+  invoiceNumber         String   @unique @map("invoice_number")
+  supplierInvoiceNumber String?  @map("supplier_invoice_number")
+  invoiceDate           DateTime @map("invoice_date")
+  dueDate               DateTime? @map("due_date")
+  
+  supplierId            String   @map("supplier_id")
+  supplier              InvSupplier @relation(fields: [supplierId], references: [id])
+  
+  purchaseOrderId       String?  @map("purchase_order_id")
+  purchaseOrder         InvPurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  
+  grnId                 String?  @map("grn_id")
+  grn                   InvGoodsReceivedNote? @relation(fields: [grnId], references: [id])
+  
+  subtotal              Decimal  @default(0) @db.Decimal(15, 2)
+  taxAmount             Decimal  @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  discountAmount        Decimal  @default(0) @map("discount_amount") @db.Decimal(15, 2)
+  totalAmount           Decimal  @default(0) @map("total_amount") @db.Decimal(15, 2)
+  paidAmount            Decimal  @default(0) @map("paid_amount") @db.Decimal(15, 2)
+  remainingAmount       Decimal  @default(0) @map("remaining_amount") @db.Decimal(15, 2)
+  
+  currency              String   @default("YER")
+  exchangeRate          Decimal  @default(1) @map("exchange_rate") @db.Decimal(15, 6)
+  
+  paymentTerms          String?  @map("payment_terms")
+  notes                 String?
+  
+  status                String   @default("draft") // draft, posted, partial, paid, cancelled
+  
+  postedBy              String?  @map("posted_by")
+  postedAt              DateTime? @map("posted_at")
+  
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  
+  items                 InvPurchaseInvoiceItem[]
+  payments              InvSupplierPayment[]
+  
+  @@map("inv_purchase_invoices")
+}
+
+// ═══════════════════════════════════════════════════
+// بنود فواتير المشتريات - Purchase Invoice Items
+// ═══════════════════════════════════════════════════
+model InvPurchaseInvoiceItem {
+  id                String   @id @default(uuid())
+  
+  invoiceId         String   @map("invoice_id")
+  invoice           InvPurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  itemId            String   @map("item_id")
+  item              InvItem  @relation(fields: [itemId], references: [id])
+  
+  description       String?
+  quantity          Decimal  @db.Decimal(15, 3)
+  unitPrice         Decimal  @map("unit_price") @db.Decimal(15, 2)
+  taxRate           Decimal  @default(0) @map("tax_rate") @db.Decimal(5, 2)
+  taxAmount         Decimal  @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  discountRate      Decimal  @default(0) @map("discount_rate") @db.Decimal(5, 2)
+  discountAmount    Decimal  @default(0) @map("discount_amount") @db.Decimal(15, 2)
+  totalAmount       Decimal  @default(0) @map("total_amount") @db.Decimal(15, 2)
+  
+  createdAt         DateTime @default(now()) @map("created_at")
+  
+  @@map("inv_purchase_invoice_items")
+}
+
+// ═══════════════════════════════════════════════════
+// مدفوعات الموردين - Supplier Payments
+// ═══════════════════════════════════════════════════
+model InvSupplierPayment {
+  id                String   @id @default(uuid())
+  paymentNumber     String   @unique @map("payment_number")
+  paymentDate       DateTime @map("payment_date")
+  
+  supplierId        String   @map("supplier_id")
+  supplier          InvSupplier @relation(fields: [supplierId], references: [id])
+  
+  invoiceId         String?  @map("invoice_id")
+  invoice           InvPurchaseInvoice? @relation(fields: [invoiceId], references: [id])
+  
+  amount            Decimal  @db.Decimal(15, 2)
+  currency          String   @default("YER")
+  
+  paymentMethod     String?  @map("payment_method") // cash, bank_transfer, check
+  referenceNumber   String?  @map("reference_number")
+  bankAccount       String?  @map("bank_account")
+  
+  notes             String?
+  
+  status            String   @default("pending") // pending, completed, cancelled
+  
+  createdBy         String?  @map("created_by")
+  approvedBy        String?  @map("approved_by")
+  
+  createdAt         DateTime @default(now()) @map("created_at")
+  
+  @@map("inv_supplier_payments")
 }

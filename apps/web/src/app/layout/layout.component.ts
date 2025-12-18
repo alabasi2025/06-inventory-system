@@ -725,7 +725,8 @@ export class LayoutComponent implements OnInit {
       items: [
         { label: 'حركات المخزون', icon: 'pi pi-arrow-right-arrow-left', routerLink: '/movements' },
         { label: 'أوامر الشراء', icon: 'pi pi-shopping-cart', routerLink: '/purchase-orders' },
-        { label: 'سندات الاستلام', icon: 'pi pi-inbox', routerLink: '/grn' }
+        { label: 'سندات الاستلام', icon: 'pi pi-inbox', routerLink: '/grn' },
+        { label: 'فواتير المشتريات', icon: 'pi pi-file-edit', routerLink: '/purchase-invoices' }
       ]
     },
     {
