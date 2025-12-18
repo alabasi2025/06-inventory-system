@@ -724,7 +724,8 @@ export class LayoutComponent implements OnInit {
       expanded: false,
       items: [
         { label: 'حركات المخزون', icon: 'pi pi-arrow-right-arrow-left', routerLink: '/movements' },
-        { label: 'أوامر الشراء', icon: 'pi pi-shopping-cart', routerLink: '/purchase-orders' }
+        { label: 'أوامر الشراء', icon: 'pi pi-shopping-cart', routerLink: '/purchase-orders' },
+        { label: 'سندات الاستلام', icon: 'pi pi-inbox', routerLink: '/grn' }
       ]
     },
     {
@@ -759,7 +760,8 @@ export class LayoutComponent implements OnInit {
       '/items': 'الأصناف',
       '/suppliers': 'الموردين',
       '/movements': 'حركات المخزون',
-      '/purchase-orders': 'أوامر الشراء'
+      '/purchase-orders': 'أوامر الشراء',
+      '/grn': 'سندات الاستلام'
     };
     this.currentPageTitle = titles[url] || 'نظام المخازن';
   }

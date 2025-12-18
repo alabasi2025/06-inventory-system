@@ -12,6 +12,7 @@ import { MovementsModule } from '../movements/movements.module';
 import { PurchaseOrdersModule } from '../purchase-orders/purchase-orders.module';
 import { DashboardModule } from '../dashboard/dashboard.module';
 import { HealthModule } from '../health/health.module';
+import { GrnModule } from '../grn/grn.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { HealthModule } from '../health/health.module';
     PurchaseOrdersModule,
     DashboardModule,
     HealthModule,
+    GrnModule,
   ],
   controllers: [AppController],
   providers: [AppService],

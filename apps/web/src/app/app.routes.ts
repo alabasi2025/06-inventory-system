@@ -39,6 +39,10 @@ export const appRoutes: Route[] = [
         path: 'purchase-orders', 
         loadComponent: () => import('./features/purchase-orders/purchase-orders.component').then(m => m.PurchaseOrdersComponent) 
       },
+      { 
+        path: 'grn', 
+        loadComponent: () => import('./features/grn/grn.component').then(m => m.GrnComponent) 
+      },
     ]
   },
   { path: '**', redirectTo: 'dashboard' }

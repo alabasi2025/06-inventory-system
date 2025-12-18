@@ -197,6 +197,23 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/purchase-orders/${id}/receive`, { warehouseId, receivedBy });
   }
 
+  // GRN (Goods Receipt Notes)
+  get(endpoint: string, params?: any): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/${endpoint}`, { params: this.buildParams(params) });
+  }
+
+  post(endpoint: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/${endpoint}`, data);
+  }
+
+  patch(endpoint: string, data: any): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/${endpoint}`, data);
+  }
+
+  delete(endpoint: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${endpoint}`);
+  }
+
   // Dashboard
   getDashboard(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/dashboard`);

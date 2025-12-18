@@ -43,6 +43,7 @@ model InvUnit {
   createdAt   DateTime @default(now())
   
   items       InvItem[]
+  grnItems    InvGrnItem[] @relation("GrnItemUnit")
   
   @@map("inv_units")
 }
@@ -67,6 +68,7 @@ model InvWarehouse {
   stocks        InvStock[]
   movementsFrom InvMovement[] @relation("FromWarehouse")
   movementsTo   InvMovement[] @relation("ToWarehouse")
+  grns          InvGoodsReceivedNote[] @relation("WarehouseGRNs")
   
   @@map("inv_warehouses")
 }
@@ -99,6 +101,7 @@ model InvItem {
   movementItems InvMovementItem[]
   poItems       InvPurchaseOrderItem[]
   prItems       InvPurchaseRequestItem[]
+  grnItems      InvGrnItem[]
   
   @@map("inv_items")
 }
@@ -154,6 +157,7 @@ model InvSupplier {
   
   contracts      InvSupplierContract[]
   purchaseOrders InvPurchaseOrder[]
+  grns           InvGoodsReceivedNote[] @relation("SupplierGRNs")
   
   @@map("inv_suppliers")
 }
@@ -325,4 +329,76 @@ model InvPurchaseOrderItem {
   item          InvItem @relation(fields: [itemId], references: [id])
   
   @@map("inv_purchase_order_items")
+}
+
+
+// ═══════════════════════════════════════════════════
+// سندات استلام البضائع - Goods Received Notes (GRN)
+// ═══════════════════════════════════════════════════
+model InvGoodsReceivedNote {
+  id                  String   @id @default(uuid())
+  grnNumber           String   @unique
+  grnDate             DateTime @default(now())
+  
+  purchaseOrderId     String?
+  supplierId          String
+  warehouseId         String
+  
+  // معلومات الشحنة
+  deliveryNoteNumber  String?
+  invoiceNumber       String?
+  vehicleNumber       String?
+  driverName          String?
+  
+  notes               String?
+  
+  status              String   @default("draft") // draft, inspected, accepted, rejected, partial
+  
+  receivedBy          String?
+  inspectedBy         String?
+  inspectedAt         DateTime?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  supplier            InvSupplier @relation("SupplierGRNs", fields: [supplierId], references: [id])
+  warehouse           InvWarehouse @relation("WarehouseGRNs", fields: [warehouseId], references: [id])
+  items               InvGrnItem[]
+  
+  @@map("inv_goods_received_notes")
+}
+
+// ═══════════════════════════════════════════════════
+// بنود سندات الاستلام - GRN Items
+// ═══════════════════════════════════════════════════
+model InvGrnItem {
+  id                String   @id @default(uuid())
+  grnId             String
+  itemId            String
+  
+  orderedQuantity   Decimal  @default(0) @db.Decimal(18,4)
+  receivedQuantity  Decimal  @db.Decimal(18,4)
+  acceptedQuantity  Decimal  @default(0) @db.Decimal(18,4)
+  rejectedQuantity  Decimal  @default(0) @db.Decimal(18,4)
+  
+  unitId            String
+  unitCost          Decimal  @default(0) @db.Decimal(18,4)
+  
+  // التتبع
+  batchNumber       String?
+  serialNumbers     String?  // JSON array of serial numbers
+  expiryDate        DateTime?
+  
+  // الفحص
+  inspectionStatus  String   @default("pending") // pending, passed, failed, partial
+  rejectionReason   String?
+  
+  notes             String?
+  createdAt         DateTime @default(now())
+  
+  grn               InvGoodsReceivedNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  item              InvItem @relation(fields: [itemId], references: [id])
+  unit              InvUnit @relation("GrnItemUnit", fields: [unitId], references: [id])
+  
+  @@map("inv_grn_items")
 }
