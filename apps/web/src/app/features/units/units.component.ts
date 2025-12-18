@@ -60,27 +60,26 @@ import { PAGE_STYLES } from '../../shared/styles/page-styles';
       <div class="table-container">
         <p-table [value]="filteredUnits" [paginator]="true" [rows]="10" 
                  [loading]="loading" [rowHover]="true"
-                 [showCurrentPageReport]="true" currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords}"
-                 styleClass="p-datatable-striped modern-table">
+                 [showCurrentPageReport]="true" 
+                 currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords}"
+                 styleClass="p-datatable-sm modern-table">
           <ng-template pTemplate="header">
             <tr>
-              <th pSortableColumn="code" style="width: 120px">
-                الكود <p-sortIcon field="code"></p-sortIcon>
-              </th>
-              <th pSortableColumn="name">
-                الاسم <p-sortIcon field="name"></p-sortIcon>
-              </th>
-              <th style="width: 180px">الاسم (إنجليزي)</th>
-              <th style="width: 120px" class="text-center">عدد الأصناف</th>
-              <th style="width: 100px" class="text-center">الحالة</th>
-              <th style="width: 120px" class="text-center">الإجراءات</th>
+              <th style="width: 100px">الكود</th>
+              <th style="width: 180px">الاسم</th>
+              <th style="width: 150px">الاسم (إنجليزي)</th>
+              <th style="width: 100px" class="text-center">عدد الأصناف</th>
+              <th style="width: 80px" class="text-center">الحالة</th>
+              <th style="width: 90px" class="text-center">الإجراءات</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-unit>
             <tr>
               <td><span class="code-badge">{{ unit.code }}</span></td>
               <td>
-                <span class="name-primary">{{ unit.name }}</span>
+                <div class="name-cell">
+                  <span class="name-primary">{{ unit.name }}</span>
+                </div>
               </td>
               <td>{{ unit.nameEn || '-' }}</td>
               <td class="text-center">
@@ -88,18 +87,16 @@ import { PAGE_STYLES } from '../../shared/styles/page-styles';
               </td>
               <td class="text-center">
                 <p-tag [severity]="unit.isActive ? 'success' : 'danger'" 
-                       [value]="unit.isActive ? 'فعال' : 'غير فعال'"
-                       [rounded]="true"></p-tag>
+                       [value]="unit.isActive ? 'فعال' : 'معطل'"
+                       [rounded]="true" styleClass="text-xs"></p-tag>
               </td>
               <td class="text-center">
                 <div class="action-buttons">
                   <button pButton icon="pi pi-pencil" 
                           class="p-button-rounded p-button-text p-button-sm"
-                          pTooltip="تعديل" tooltipPosition="top"
                           (click)="editUnit(unit)"></button>
                   <button pButton icon="pi pi-trash" 
                           class="p-button-rounded p-button-text p-button-danger p-button-sm"
-                          pTooltip="حذف" tooltipPosition="top"
                           (click)="deleteUnit(unit)"></button>
                 </div>
               </td>
@@ -164,9 +161,16 @@ import { PAGE_STYLES } from '../../shared/styles/page-styles';
     </p-dialog>
   `,
   styles: [PAGE_STYLES + `
+    .name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
     .name-primary {
-      font-weight: 500;
+      font-weight: 600;
       color: #1e293b;
+      font-size: 0.9375rem;
     }
 
     .count-badge {
