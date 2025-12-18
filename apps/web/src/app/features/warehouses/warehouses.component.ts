@@ -9,17 +9,19 @@ import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
-import { Toolbar } from 'primeng/toolbar';
 import { Tag } from 'primeng/tag';
+import { InputIcon } from 'primeng/inputicon';
+import { IconField } from 'primeng/iconfield';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ApiService } from '../../core/services/api.service';
+import { PAGE_STYLES } from '../../shared/styles/page-styles';
 
 @Component({
   selector: 'app-warehouses',
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, Dialog,
-    InputText, Select, ToggleSwitch, Toast, ConfirmDialog, Toolbar, Tag
+    InputText, Select, ToggleSwitch, Toast, ConfirmDialog, Tag, InputIcon, IconField
   ],
   providers: [MessageService, ConfirmationService],
   template: `
@@ -27,114 +29,244 @@ import { ApiService } from '../../core/services/api.service';
     <p-confirmdialog></p-confirmdialog>
     
     <div class="page-container">
-      <p-toolbar styleClass="mb-4">
-        <ng-template #start>
-          <h2>المستودعات</h2>
-        </ng-template>
-        <ng-template #end>
-          <button pButton label="إضافة مستودع" icon="pi pi-plus" (click)="openNew()"></button>
-        </ng-template>
-      </p-toolbar>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <div class="header-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a)">
+            <i class="pi pi-building"></i>
+          </div>
+          <div class="header-text">
+            <h1>المستودعات</h1>
+            <p>إدارة مستودعات التخزين والمواقع</p>
+          </div>
+        </div>
+        <button pButton label="إضافة مستودع" icon="pi pi-plus" 
+                class="p-button-primary" (click)="openNew()"></button>
+      </div>
 
-      <p-table [value]="warehouses" [paginator]="true" [rows]="10" [loading]="loading" styleClass="p-datatable-striped">
-        <ng-template pTemplate="header">
-          <tr>
-            <th pSortableColumn="code">الكود</th>
-            <th pSortableColumn="name">الاسم</th>
-            <th>النوع</th>
-            <th>العنوان</th>
-            <th>عدد الأصناف</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-warehouse>
-          <tr>
-            <td>{{ warehouse.code }}</td>
-            <td>{{ warehouse.name }}</td>
-            <td>
-              <p-tag [value]="getTypeLabel(warehouse.type)" [severity]="getTypeSeverity(warehouse.type)"></p-tag>
-            </td>
-            <td>{{ warehouse.address || '-' }}</td>
-            <td>{{ warehouse._count?.stocks || 0 }}</td>
-            <td>
-              <span [class]="'status-badge ' + (warehouse.isActive ? 'active' : 'inactive')">
-                {{ warehouse.isActive ? 'فعال' : 'غير فعال' }}
-              </span>
-            </td>
-            <td>
-              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text" 
-                      (click)="editWarehouse(warehouse)"></button>
-              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" 
-                      (click)="deleteWarehouse(warehouse)"></button>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="text-center">لا توجد مستودعات</td>
-          </tr>
-        </ng-template>
-      </p-table>
+      <!-- Search & Filter Bar -->
+      <div class="filter-bar">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search"></p-inputicon>
+          <input pInputText type="text" [(ngModel)]="searchTerm" 
+                 (input)="onSearch($event)" placeholder="بحث في المستودعات..." 
+                 class="search-input" />
+        </p-iconfield>
+        <div class="filter-info">
+          <span class="total-count">{{ warehouses.length }} مستودع</span>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-container">
+        <p-table [value]="filteredWarehouses" [paginator]="true" [rows]="10" 
+                 [loading]="loading" [rowHover]="true"
+                 [showCurrentPageReport]="true" currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords}"
+                 styleClass="p-datatable-striped modern-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="code" style="width: 120px">
+                الكود <p-sortIcon field="code"></p-sortIcon>
+              </th>
+              <th pSortableColumn="name">
+                الاسم <p-sortIcon field="name"></p-sortIcon>
+              </th>
+              <th style="width: 100px" class="text-center">النوع</th>
+              <th>العنوان</th>
+              <th style="width: 100px" class="text-center">الهاتف</th>
+              <th style="width: 100px" class="text-center">عدد الأصناف</th>
+              <th style="width: 100px" class="text-center">الحالة</th>
+              <th style="width: 120px" class="text-center">الإجراءات</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-warehouse>
+            <tr>
+              <td><span class="code-badge">{{ warehouse.code }}</span></td>
+              <td>
+                <div class="warehouse-info">
+                  <span class="name-primary">{{ warehouse.name }}</span>
+                  <span class="name-secondary" *ngIf="warehouse.nameEn">{{ warehouse.nameEn }}</span>
+                </div>
+              </td>
+              <td class="text-center">
+                <p-tag [value]="getTypeLabel(warehouse.type)" 
+                       [severity]="getTypeSeverity(warehouse.type)"
+                       [rounded]="true"></p-tag>
+              </td>
+              <td>
+                <span class="address-text" *ngIf="warehouse.address">
+                  <i class="pi pi-map-marker"></i>
+                  {{ warehouse.address }}
+                </span>
+                <span *ngIf="!warehouse.address" class="no-data">-</span>
+              </td>
+              <td class="text-center">
+                <span *ngIf="warehouse.phone" class="phone-text">{{ warehouse.phone }}</span>
+                <span *ngIf="!warehouse.phone" class="no-data">-</span>
+              </td>
+              <td class="text-center">
+                <span class="count-badge">{{ warehouse._count?.stocks || 0 }}</span>
+              </td>
+              <td class="text-center">
+                <p-tag [severity]="warehouse.isActive ? 'success' : 'danger'" 
+                       [value]="warehouse.isActive ? 'فعال' : 'غير فعال'"
+                       [rounded]="true"></p-tag>
+              </td>
+              <td class="text-center">
+                <div class="action-buttons">
+                  <button pButton icon="pi pi-pencil" 
+                          class="p-button-rounded p-button-text p-button-sm"
+                          pTooltip="تعديل" tooltipPosition="top"
+                          (click)="editWarehouse(warehouse)"></button>
+                  <button pButton icon="pi pi-trash" 
+                          class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                          pTooltip="حذف" tooltipPosition="top"
+                          (click)="deleteWarehouse(warehouse)"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="8" class="empty-state">
+                <div class="empty-content">
+                  <i class="pi pi-building"></i>
+                  <h4>لا توجد مستودعات</h4>
+                  <p>ابدأ بإضافة مستودع جديد</p>
+                  <button pButton label="إضافة مستودع" icon="pi pi-plus" 
+                          class="p-button-outlined" (click)="openNew()"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </div>
 
-    <p-dialog [(visible)]="warehouseDialog" [header]="editMode ? 'تعديل مستودع' : 'إضافة مستودع'" 
-              [modal]="true" [style]="{width: '500px'}" styleClass="p-fluid">
+    <!-- Add/Edit Dialog -->
+    <p-dialog [(visible)]="warehouseDialog" [header]="editMode ? 'تعديل مستودع' : 'إضافة مستودع جديد'" 
+              [modal]="true" [style]="{width: '550px'}" styleClass="modern-dialog">
       <ng-template pTemplate="content">
-        <div class="field">
-          <label for="code">الكود *</label>
-          <input pInputText id="code" [(ngModel)]="warehouse.code" required [disabled]="editMode" />
-        </div>
-        <div class="field">
-          <label for="name">الاسم (عربي) *</label>
-          <input pInputText id="name" [(ngModel)]="warehouse.name" required />
-        </div>
-        <div class="field">
-          <label for="nameEn">الاسم (إنجليزي)</label>
-          <input pInputText id="nameEn" [(ngModel)]="warehouse.nameEn" />
-        </div>
-        <div class="field">
-          <label for="type">النوع</label>
-          <p-select [options]="warehouseTypes" [(ngModel)]="warehouse.type" 
-                    optionLabel="label" optionValue="value"></p-select>
-        </div>
-        <div class="field">
-          <label for="address">العنوان</label>
-          <input pInputText id="address" [(ngModel)]="warehouse.address" />
-        </div>
-        <div class="field">
-          <label for="phone">الهاتف</label>
-          <input pInputText id="phone" [(ngModel)]="warehouse.phone" />
-        </div>
-        <div class="field-checkbox">
-          <p-toggleswitch [(ngModel)]="warehouse.isActive"></p-toggleswitch>
-          <label>فعال</label>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="code">الكود <span class="required">*</span></label>
+            <input pInputText id="code" [(ngModel)]="warehouse.code" 
+                   [disabled]="editMode" placeholder="مثال: WH-001" />
+            <small class="field-hint" *ngIf="!editMode">الكود فريد ولا يمكن تغييره لاحقاً</small>
+          </div>
+          
+          <div class="form-field">
+            <label for="type">النوع <span class="required">*</span></label>
+            <p-select [options]="warehouseTypes" [(ngModel)]="warehouse.type" 
+                      optionLabel="label" optionValue="value"
+                      styleClass="w-full"></p-select>
+          </div>
+          
+          <div class="form-field">
+            <label for="name">الاسم (عربي) <span class="required">*</span></label>
+            <input pInputText id="name" [(ngModel)]="warehouse.name" 
+                   placeholder="اسم المستودع بالعربية" />
+          </div>
+          
+          <div class="form-field">
+            <label for="nameEn">الاسم (إنجليزي)</label>
+            <input pInputText id="nameEn" [(ngModel)]="warehouse.nameEn" 
+                   placeholder="Warehouse name in English" dir="ltr" />
+          </div>
+          
+          <div class="form-field full-width">
+            <label for="address">العنوان</label>
+            <input pInputText id="address" [(ngModel)]="warehouse.address" 
+                   placeholder="عنوان المستودع" />
+          </div>
+          
+          <div class="form-field">
+            <label for="phone">الهاتف</label>
+            <input pInputText id="phone" [(ngModel)]="warehouse.phone" 
+                   placeholder="رقم الهاتف" dir="ltr" />
+          </div>
+          
+          <div class="form-field">
+            <label for="email">البريد الإلكتروني</label>
+            <input pInputText id="email" [(ngModel)]="warehouse.email" 
+                   placeholder="email@example.com" dir="ltr" />
+          </div>
+          
+          <div class="form-field-switch">
+            <p-toggleswitch [(ngModel)]="warehouse.isActive"></p-toggleswitch>
+            <label>المستودع فعال</label>
+          </div>
         </div>
       </ng-template>
       <ng-template pTemplate="footer">
-        <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
-        <button pButton label="حفظ" icon="pi pi-check" (click)="saveWarehouse()"></button>
+        <div class="dialog-footer">
+          <button pButton label="إلغاء" icon="pi pi-times" 
+                  class="p-button-text" (click)="hideDialog()"></button>
+          <button pButton label="حفظ" icon="pi pi-check" 
+                  class="p-button-primary" (click)="saveWarehouse()"
+                  [loading]="saving"></button>
+        </div>
       </ng-template>
     </p-dialog>
   `,
-  styles: [`
-    .page-container { padding: 1rem; }
-    .field { margin-bottom: 1rem; }
-    .field label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-    .field-checkbox { display: flex; align-items: center; gap: 0.5rem; }
-    .status-badge { padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem; }
-    .status-badge.active { background: #dcfce7; color: #166534; }
-    .status-badge.inactive { background: #fee2e2; color: #991b1b; }
-    .text-center { text-align: center; padding: 2rem; color: #64748b; }
-    h2 { margin: 0; color: #1e3a5f; }
+  styles: [PAGE_STYLES + `
+    .warehouse-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .name-primary {
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .name-secondary {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.125rem;
+    }
+
+    .address-text {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: #475569;
+      font-size: 0.875rem;
+    }
+
+    .address-text i {
+      color: #94a3b8;
+      font-size: 0.75rem;
+    }
+
+    .phone-text {
+      font-family: monospace;
+      color: #475569;
+    }
+
+    .no-data {
+      color: #cbd5e1;
+    }
+
+    .count-badge {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 0.25rem 0.625rem;
+      border-radius: 1rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
   `]
 })
 export class WarehousesComponent implements OnInit {
   warehouses: any[] = [];
+  filteredWarehouses: any[] = [];
   warehouse: any = {};
   warehouseDialog = false;
   editMode = false;
   loading = false;
+  saving = false;
+  searchTerm = '';
 
   warehouseTypes = [
     { label: 'رئيسي', value: 'main' },
@@ -157,6 +289,7 @@ export class WarehousesComponent implements OnInit {
     this.api.getWarehouses({ take: 100 }).subscribe({
       next: (res) => {
         this.warehouses = res.data;
+        this.filteredWarehouses = [...this.warehouses];
         this.loading = false;
       },
       error: () => {
@@ -164,6 +297,16 @@ export class WarehousesComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'خطأ', detail: 'فشل تحميل المستودعات' });
       }
     });
+  }
+
+  onSearch(event: any) {
+    const term = event.target.value.toLowerCase();
+    this.filteredWarehouses = this.warehouses.filter(w => 
+      w.code.toLowerCase().includes(term) ||
+      w.name.toLowerCase().includes(term) ||
+      (w.nameEn && w.nameEn.toLowerCase().includes(term)) ||
+      (w.address && w.address.toLowerCase().includes(term))
+    );
   }
 
   getTypeLabel(type: string): string {
@@ -193,13 +336,14 @@ export class WarehousesComponent implements OnInit {
       message: `هل أنت متأكد من حذف المستودع "${warehouse.name}"؟`,
       header: 'تأكيد الحذف',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'نعم',
-      rejectLabel: 'لا',
+      acceptLabel: 'نعم، احذف',
+      rejectLabel: 'إلغاء',
+      acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.api.deleteWarehouse(warehouse.id).subscribe({
           next: () => {
             this.loadWarehouses();
-            this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم حذف المستودع' });
+            this.messageService.add({ severity: 'success', summary: 'تم', detail: 'تم حذف المستودع بنجاح' });
           },
           error: (err) => {
             this.messageService.add({ severity: 'error', summary: 'خطأ', detail: err.error?.message || 'فشل حذف المستودع' });
@@ -219,6 +363,7 @@ export class WarehousesComponent implements OnInit {
       return;
     }
 
+    this.saving = true;
     const action = this.editMode
       ? this.api.updateWarehouse(this.warehouse.id, this.warehouse)
       : this.api.createWarehouse(this.warehouse);
@@ -227,13 +372,15 @@ export class WarehousesComponent implements OnInit {
       next: () => {
         this.loadWarehouses();
         this.hideDialog();
+        this.saving = false;
         this.messageService.add({ 
           severity: 'success', 
-          summary: 'نجاح', 
-          detail: this.editMode ? 'تم تحديث المستودع' : 'تم إضافة المستودع' 
+          summary: 'تم', 
+          detail: this.editMode ? 'تم تحديث المستودع بنجاح' : 'تم إضافة المستودع بنجاح' 
         });
       },
       error: (err) => {
+        this.saving = false;
         this.messageService.add({ severity: 'error', summary: 'خطأ', detail: err.error?.message || 'فشل حفظ المستودع' });
       }
     });
