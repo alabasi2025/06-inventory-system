@@ -11,6 +11,7 @@ import { SuppliersModule } from '../suppliers/suppliers.module';
 import { MovementsModule } from '../movements/movements.module';
 import { PurchaseOrdersModule } from '../purchase-orders/purchase-orders.module';
 import { DashboardModule } from '../dashboard/dashboard.module';
+import { HealthModule } from '../health/health.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DashboardModule } from '../dashboard/dashboard.module';
     MovementsModule,
     PurchaseOrdersModule,
     DashboardModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
