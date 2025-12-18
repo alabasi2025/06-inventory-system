@@ -1,9 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @ApiTags('Health Check')
-@Controller('health')
+@Controller('v1/health')
+@SkipThrottle() // Health check should not be rate limited
 export class HealthController {
   constructor(private prisma: PrismaService) {}
 
@@ -29,6 +31,7 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       version: '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
       services: {
         database: {
           status: dbStatus,

@@ -8,8 +8,50 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
 
+// Custom JSON Logger
+class JsonLogger extends Logger {
+  log(message: string, context?: string) {
+    console.log(JSON.stringify({
+      level: 'info',
+      timestamp: new Date().toISOString(),
+      context: context || 'Application',
+      message,
+    }));
+  }
+
+  error(message: string, trace?: string, context?: string) {
+    console.error(JSON.stringify({
+      level: 'error',
+      timestamp: new Date().toISOString(),
+      context: context || 'Application',
+      message,
+      trace,
+    }));
+  }
+
+  warn(message: string, context?: string) {
+    console.warn(JSON.stringify({
+      level: 'warn',
+      timestamp: new Date().toISOString(),
+      context: context || 'Application',
+      message,
+    }));
+  }
+
+  debug(message: string, context?: string) {
+    console.debug(JSON.stringify({
+      level: 'debug',
+      timestamp: new Date().toISOString(),
+      context: context || 'Application',
+      message,
+    }));
+  }
+}
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? new JsonLogger() : new Logger(),
+  });
   
   // Global prefix
   const globalPrefix = 'api';
@@ -55,6 +97,7 @@ async function bootstrap() {
       - **التقارير**: تقارير المخزون والمشتريات
     `)
     .setVersion('1.0')
+    .addTag('Health Check')
     .addTag('التصنيفات - Categories')
     .addTag('وحدات القياس - Units')
     .addTag('المستودعات - Warehouses')
@@ -87,6 +130,9 @@ async function bootstrap() {
   );
   Logger.log(
     `📚 Swagger documentation: http://localhost:${port}/${globalPrefix}/docs`,
+  );
+  Logger.log(
+    `❤️ Health check: http://localhost:${port}/${globalPrefix}/v1/health`,
   );
 }
 
