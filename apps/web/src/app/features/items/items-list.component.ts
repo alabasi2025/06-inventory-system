@@ -1,218 +1,219 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ItemsService, Item } from '../../core/services/items.service';
 import { CategoriesService, Category } from '../../core/services/categories.service';
 import { UnitsService, Unit } from '../../core/services/units.service';
 
+// PrimeNG Modules
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { Textarea } from 'primeng/textarea';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { CardModule } from 'primeng/card';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService, ConfirmationService } from 'primeng/api';
+
 @Component({
   selector: 'app-items-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule, FormsModule,
+    TableModule, ButtonModule, DialogModule, InputTextModule,
+    Select, InputNumberModule, Textarea, CheckboxModule,
+    ToastModule, ConfirmDialogModule, TagModule, CardModule, SkeletonModule
+  ],
+  providers: [MessageService, ConfirmationService],
   template: `
+    <p-toast position="top-left"></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+    
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-800">الأصناف</h1>
-        <button (click)="showForm = true; editingItem = null; resetForm()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          إضافة صنف
-        </button>
+        <button pButton label="إضافة صنف" icon="pi pi-plus" 
+                (click)="openNew()" class="p-button-primary"></button>
       </div>
       
-      <!-- Search & Filters -->
-      <div class="bg-white rounded-xl shadow-sm p-4">
+      <!-- Filters -->
+      <p-card>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <input type="text" [(ngModel)]="searchQuery" placeholder="بحث بالاسم أو الكود..."
-                   (input)="loadItems()"
-                   class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <span class="p-input-icon-right w-full">
+              <i class="pi pi-search"></i>
+              <input pInputText [(ngModel)]="searchQuery" placeholder="بحث بالاسم أو الكود..."
+                     (input)="loadItems()" class="w-full" />
+            </span>
           </div>
           <div>
-            <select [(ngModel)]="filterCategory" (change)="loadItems()"
-                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="">كل التصنيفات</option>
-              @for (cat of categories; track cat.id) {
-                <option [value]="cat.id">{{ cat.name }}</option>
-              }
-            </select>
+            <p-select [options]="categoryOptions" [(ngModel)]="filterCategory"
+                        optionLabel="label" optionValue="value" [showClear]="true"
+                        placeholder="كل التصنيفات" (onChange)="loadItems()" styleClass="w-full"></p-select>
           </div>
         </div>
-      </div>
+      </p-card>
       
-      <!-- Form Modal -->
-      @if (showForm) {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-          <div class="bg-white rounded-xl p-6 w-full max-w-2xl m-4">
-            <h2 class="text-xl font-bold mb-4">{{ editingItem ? 'تعديل' : 'إضافة' }} صنف</h2>
-            
-            <form (ngSubmit)="saveItem()" class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الكود *</label>
-                  <input type="text" [(ngModel)]="formData.code" name="code" required
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الباركود</label>
-                  <input type="text" [(ngModel)]="formData.barcode" name="barcode"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
+      @if (loading) {
+        <p-card>
+          <div class="space-y-3">
+            @for (i of [1,2,3,4,5]; track i) {
+              <div class="flex gap-4">
+                <p-skeleton width="8%" height="2rem"></p-skeleton>
+                <p-skeleton width="20%" height="2rem"></p-skeleton>
+                <p-skeleton width="15%" height="2rem"></p-skeleton>
+                <p-skeleton width="10%" height="2rem"></p-skeleton>
+                <p-skeleton width="10%" height="2rem"></p-skeleton>
+                <p-skeleton width="12%" height="2rem"></p-skeleton>
+                <p-skeleton width="10%" height="2rem"></p-skeleton>
               </div>
-              
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الاسم بالعربية *</label>
-                  <input type="text" [(ngModel)]="formData.name" name="name" required
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الاسم بالإنجليزية</label>
-                  <input type="text" [(ngModel)]="formData.name_en" name="name_en"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-              </div>
-              
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">التصنيف *</label>
-                  <select [(ngModel)]="formData.category_id" name="category_id" required
-                          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- اختر --</option>
-                    @for (cat of categories; track cat.id) {
-                      <option [value]="cat.id">{{ cat.name }}</option>
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">وحدة القياس *</label>
-                  <select [(ngModel)]="formData.unit_id" name="unit_id" required
-                          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- اختر --</option>
-                    @for (unit of units; track unit.id) {
-                      <option [value]="unit.id">{{ unit.name }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
-              
-              <div class="grid grid-cols-3 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الحد الأدنى</label>
-                  <input type="number" [(ngModel)]="formData.min_qty" name="min_qty" min="0"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الحد الأقصى</label>
-                  <input type="number" [(ngModel)]="formData.max_qty" name="max_qty" min="0"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">نقطة إعادة الطلب</label>
-                  <input type="number" [(ngModel)]="formData.reorder_point" name="reorder_point" min="0"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
-                <textarea [(ngModel)]="formData.description" name="description" rows="2"
-                          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
-              </div>
-              
-              <div class="flex items-center gap-2">
-                <input type="checkbox" [(ngModel)]="formData.is_active" name="is_active" id="is_active"
-                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                <label for="is_active" class="text-sm text-gray-700">نشط</label>
-              </div>
-              
-              <div class="flex gap-3 pt-4">
-                <button type="submit" 
-                        class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                  {{ editingItem ? 'تحديث' : 'حفظ' }}
-                </button>
-                <button type="button" (click)="showForm = false"
-                        class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
-                  إلغاء
-                </button>
-              </div>
-            </form>
+            }
           </div>
+        </p-card>
+      }
+      
+      @if (error && !loading) {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <i class="pi pi-exclamation-circle text-red-500 text-4xl mb-4"></i>
+          <p class="text-red-700 mb-4">{{ error }}</p>
+          <button pButton label="إعادة المحاولة" icon="pi pi-refresh" 
+                  class="p-button-outlined p-button-danger" (click)="loadItems()"></button>
         </div>
       }
       
-      <!-- Table -->
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الكود</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الاسم</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">التصنيف</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الوحدة</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الحد الأدنى</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">متوسط التكلفة</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الحالة</th>
-              <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y">
-            @for (item of items; track item.id) {
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm font-medium">{{ item.code }}</td>
-                <td class="px-4 py-3 text-sm">{{ item.name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-500">{{ item.category?.name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-500">{{ item.unit?.name }}</td>
-                <td class="px-4 py-3 text-sm">{{ item.min_qty }}</td>
-                <td class="px-4 py-3 text-sm">{{ item.avg_cost | number:'1.2-2' }}</td>
-                <td class="px-4 py-3 text-sm">
-                  <span [class]="item.is_active ? 'px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs' : 'px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs'">
-                    {{ item.is_active ? 'نشط' : 'غير نشط' }}
-                  </span>
+      @if (!loading && !error) {
+        <p-card>
+          <p-table [value]="items" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" [rowsPerPageOptions]="[10, 25, 50]"
+                   currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords} صنف"
+                   styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="code">الكود</th>
+                <th pSortableColumn="name">الاسم</th>
+                <th>التصنيف</th>
+                <th>الوحدة</th>
+                <th pSortableColumn="min_qty">الحد الأدنى</th>
+                <th pSortableColumn="avg_cost">متوسط التكلفة</th>
+                <th pSortableColumn="is_active">الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td class="font-medium">{{ item.code }}</td>
+                <td>{{ item.name }}</td>
+                <td class="text-gray-500">{{ item.category?.name || '-' }}</td>
+                <td class="text-gray-500">{{ item.unit?.name || '-' }}</td>
+                <td>{{ item.min_qty }}</td>
+                <td>{{ item.avg_cost | number:'1.2-2' }}</td>
+                <td>
+                  <p-tag [value]="item.is_active ? 'نشط' : 'غير نشط'" 
+                         [severity]="item.is_active ? 'success' : 'danger'"></p-tag>
                 </td>
-                <td class="px-4 py-3 text-sm">
+                <td>
                   <div class="flex gap-2">
-                    <button (click)="editItem(item)" class="text-blue-600 hover:text-blue-800">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button (click)="deleteItem(item)" class="text-red-600 hover:text-red-800">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info"
+                            (click)="editItem(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                            (click)="confirmDelete(item)"></button>
                   </div>
                 </td>
               </tr>
-            } @empty {
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="8" class="px-6 py-8 text-center text-gray-500">لا توجد أصناف</td>
+                <td colspan="8" class="text-center py-8">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
+                  <p class="text-gray-500">لا توجد أصناف</p>
+                </td>
               </tr>
-            }
-          </tbody>
-        </table>
-        
-        <!-- Pagination -->
-        @if (totalPages > 1) {
-          <div class="px-6 py-4 border-t flex items-center justify-between">
-            <span class="text-sm text-gray-600">
-              عرض {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} من {{ totalItems }}
-            </span>
-            <div class="flex gap-2">
-              <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
-                      class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">السابق</button>
-              <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages"
-                      class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">التالي</button>
+            </ng-template>
+          </p-table>
+        </p-card>
+      }
+      
+      <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '700px'}"
+                [header]="editingItem ? 'تعديل صنف' : 'إضافة صنف'" [closable]="true">
+        <div class="space-y-4 pt-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الكود <span class="text-red-500">*</span></label>
+              <input pInputText [(ngModel)]="formData.code" class="w-full" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الباركود</label>
+              <input pInputText [(ngModel)]="formData.barcode" class="w-full" />
             </div>
           </div>
-        }
-      </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الاسم بالعربية <span class="text-red-500">*</span></label>
+              <input pInputText [(ngModel)]="formData.name" class="w-full" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الاسم بالإنجليزية</label>
+              <input pInputText [(ngModel)]="formData.name_en" class="w-full" />
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">التصنيف <span class="text-red-500">*</span></label>
+              <p-select [options]="categoryOptions" [(ngModel)]="formData.category_id"
+                          optionLabel="label" optionValue="value" placeholder="-- اختر --"
+                          styleClass="w-full"></p-select>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">وحدة القياس <span class="text-red-500">*</span></label>
+              <p-select [options]="unitOptions" [(ngModel)]="formData.unit_id"
+                          optionLabel="label" optionValue="value" placeholder="-- اختر --"
+                          styleClass="w-full"></p-select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الحد الأدنى</label>
+              <p-inputNumber [(ngModel)]="formData.min_qty" [min]="0" styleClass="w-full"></p-inputNumber>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الحد الأقصى</label>
+              <p-inputNumber [(ngModel)]="formData.max_qty" [min]="0" styleClass="w-full"></p-inputNumber>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">نقطة إعادة الطلب</label>
+              <p-inputNumber [(ngModel)]="formData.reorder_point" [min]="0" styleClass="w-full"></p-inputNumber>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <label class="font-medium">الوصف</label>
+            <textarea pTextarea [(ngModel)]="formData.description" rows="2" class="w-full"></textarea>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <p-checkbox [(ngModel)]="formData.is_active" [binary]="true" inputId="is_active"></p-checkbox>
+            <label for="is_active">نشط</label>
+          </div>
+        </div>
+        
+        <ng-template pTemplate="footer">
+          <div class="flex gap-2 justify-end">
+            <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" 
+                    (click)="showForm = false" [disabled]="saving"></button>
+            <button pButton [label]="editingItem ? 'تحديث' : 'حفظ'" icon="pi pi-check" 
+                    (click)="saveItem()" [loading]="saving"></button>
+          </div>
+        </ng-template>
+      </p-dialog>
     </div>
   `
 })
@@ -220,35 +221,25 @@ export class ItemsListComponent implements OnInit {
   private itemsService = inject(ItemsService);
   private categoriesService = inject(CategoriesService);
   private unitsService = inject(UnitsService);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   
   items: Item[] = [];
   categories: Category[] = [];
   units: Unit[] = [];
+  categoryOptions: {label: string, value: string}[] = [];
+  unitOptions: {label: string, value: string}[] = [];
   
   showForm = false;
+  loading = true;
+  saving = false;
+  error: string | null = null;
   editingItem: Item | null = null;
+  
   searchQuery = '';
   filterCategory = '';
   
-  currentPage = 1;
-  pageSize = 10;
-  totalItems = 0;
-  totalPages = 0;
-  Math = Math;
-  
-  formData: Partial<Item> = {
-    code: '',
-    barcode: '',
-    name: '',
-    name_en: '',
-    category_id: '',
-    unit_id: '',
-    description: '',
-    min_qty: 0,
-    max_qty: 0,
-    reorder_point: 0,
-    is_active: true
-  };
+  formData: Partial<Item> = this.getEmptyForm();
 
   ngOnInit() {
     this.loadCategories();
@@ -256,89 +247,89 @@ export class ItemsListComponent implements OnInit {
     this.loadItems();
   }
 
+  getEmptyForm(): Partial<Item> {
+    return {
+      code: '', barcode: '', name: '', name_en: '', category_id: '',
+      unit_id: '', min_qty: 0, max_qty: 0, reorder_point: 0,
+      description: '', is_active: true
+    };
+  }
+
   loadCategories() {
     this.categoriesService.getAll({ limit: 100 }).subscribe({
-      next: (res) => this.categories = res.data,
-      error: (err) => console.error('Error loading categories:', err)
+      next: (res) => {
+        this.categories = res.data;
+        this.categoryOptions = res.data.map(c => ({ label: c.name, value: c.id }));
+      }
     });
   }
 
   loadUnits() {
     this.unitsService.getAll({ limit: 100 }).subscribe({
-      next: (res) => this.units = res.data,
-      error: (err) => console.error('Error loading units:', err)
+      next: (res) => {
+        this.units = res.data;
+        this.unitOptions = res.data.map(u => ({ label: u.name, value: u.id }));
+      }
     });
   }
 
   loadItems() {
-    const params: any = {
-      page: this.currentPage,
-      limit: this.pageSize
-    };
+    this.loading = true;
+    this.error = null;
+    
+    const params: any = { limit: 100 };
     if (this.searchQuery) params.search = this.searchQuery;
-    if (this.filterCategory) params.categoryId = this.filterCategory;
+    if (this.filterCategory) params.category_id = this.filterCategory;
     
     this.itemsService.getAll(params).subscribe({
-      next: (res) => {
-        this.items = res.data;
-        this.totalItems = res.meta.total;
-        this.totalPages = res.meta.totalPages;
-      },
-      error: (err) => console.error('Error loading items:', err)
+      next: (res) => { this.items = res.data; this.loading = false; },
+      error: (err) => {
+        this.error = err.error?.message || 'حدث خطأ أثناء تحميل الأصناف';
+        this.loading = false;
+        this.messageService.add({ severity: 'error', summary: 'خطأ', detail: this.error || 'خطأ' });
+      }
     });
   }
 
-  resetForm() {
-    this.formData = {
-      code: '',
-      barcode: '',
-      name: '',
-      name_en: '',
-      category_id: '',
-      unit_id: '',
-      description: '',
-      min_qty: 0,
-      max_qty: 0,
-      reorder_point: 0,
-      is_active: true
-    };
-  }
+  openNew() { this.editingItem = null; this.formData = this.getEmptyForm(); this.showForm = true; }
 
-  editItem(item: Item) {
-    this.editingItem = item;
-    this.formData = { ...item };
-    this.showForm = true;
-  }
+  editItem(item: Item) { this.editingItem = item; this.formData = { ...item }; this.showForm = true; }
 
   saveItem() {
-    const data = { ...this.formData };
-    
-    const request = this.editingItem
-      ? this.itemsService.update(this.editingItem.id, data)
-      : this.itemsService.create(data);
-    
-    request.subscribe({
+    if (!this.formData.code || !this.formData.name || !this.formData.category_id || !this.formData.unit_id) {
+      this.messageService.add({ severity: 'warn', summary: 'تنبيه', detail: 'يرجى ملء الحقول المطلوبة' });
+      return;
+    }
+    this.saving = true;
+    const req = this.editingItem
+      ? this.itemsService.update(this.editingItem.id, this.formData)
+      : this.itemsService.create(this.formData);
+    req.subscribe({
       next: () => {
-        this.showForm = false;
-        this.loadItems();
+        this.messageService.add({ severity: 'success', summary: 'نجاح', detail: this.editingItem ? 'تم التحديث' : 'تم الإضافة' });
+        this.showForm = false; this.saving = false; this.loadItems();
       },
-      error: (err) => console.error('Error saving item:', err)
+      error: (err) => {
+        this.saving = false;
+        this.messageService.add({ severity: 'error', summary: 'خطأ', detail: err.error?.message || 'حدث خطأ' });
+      }
     });
   }
 
-  deleteItem(item: Item) {
-    if (confirm(`هل أنت متأكد من حذف الصنف "${item.name}"؟`)) {
-      this.itemsService.delete(item.id).subscribe({
-        next: () => this.loadItems(),
-        error: (err) => console.error('Error deleting item:', err)
-      });
-    }
-  }
-
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadItems();
-    }
+  confirmDelete(item: Item) {
+    this.confirmationService.confirm({
+      message: `هل أنت متأكد من حذف "${item.name}"؟`,
+      header: 'تأكيد الحذف',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'نعم',
+      rejectLabel: 'إلغاء',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.itemsService.delete(item.id).subscribe({
+          next: () => { this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم الحذف' }); this.loadItems(); },
+          error: (err) => this.messageService.add({ severity: 'error', summary: 'خطأ', detail: err.error?.message || 'خطأ' })
+        });
+      }
+    });
   }
 }

@@ -3,123 +3,209 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UnitsService, Unit } from '../../core/services/units.service';
 
+// PrimeNG Modules
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { CardModule } from 'primeng/card';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService, ConfirmationService } from 'primeng/api';
+
 @Component({
   selector: 'app-units-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, FormsModule,
+    TableModule, ButtonModule, DialogModule, InputTextModule,
+    CheckboxModule, ToastModule, ConfirmDialogModule,
+    TagModule, CardModule, SkeletonModule
+  ],
+  providers: [MessageService, ConfirmationService],
   template: `
+    <p-toast position="top-left"></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+    
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-800">وحدات القياس</h1>
-        <button (click)="showForm = true; editingUnit = null; resetForm()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          إضافة وحدة
-        </button>
+        <button pButton label="إضافة وحدة" icon="pi pi-plus" 
+                (click)="openNew()" class="p-button-primary"></button>
       </div>
       
-      @if (showForm) {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">{{ editingUnit ? 'تعديل' : 'إضافة' }} وحدة قياس</h2>
-            <form (ngSubmit)="saveUnit()" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الكود</label>
-                <input type="text" [(ngModel)]="formData.code" name="code" required
-                       class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+      <!-- Loading State -->
+      @if (loading) {
+        <p-card>
+          <div class="space-y-3">
+            @for (i of [1,2,3,4,5]; track i) {
+              <div class="flex gap-4">
+                <p-skeleton width="15%" height="2rem"></p-skeleton>
+                <p-skeleton width="25%" height="2rem"></p-skeleton>
+                <p-skeleton width="15%" height="2rem"></p-skeleton>
+                <p-skeleton width="15%" height="2rem"></p-skeleton>
+                <p-skeleton width="20%" height="2rem"></p-skeleton>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الاسم بالعربية</label>
-                <input type="text" [(ngModel)]="formData.name" name="name" required
-                       class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الاسم بالإنجليزية</label>
-                <input type="text" [(ngModel)]="formData.name_en" name="name_en"
-                       class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" [(ngModel)]="formData.is_active" name="is_active" id="is_active"
-                       class="rounded border-gray-300 text-blue-600">
-                <label for="is_active" class="text-sm text-gray-700">نشط</label>
-              </div>
-              <div class="flex gap-3 pt-4">
-                <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                  {{ editingUnit ? 'تحديث' : 'حفظ' }}
-                </button>
-                <button type="button" (click)="showForm = false"
-                        class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">إلغاء</button>
-              </div>
-            </form>
+            }
           </div>
+        </p-card>
+      }
+      
+      <!-- Error State -->
+      @if (error && !loading) {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <i class="pi pi-exclamation-circle text-red-500 text-4xl mb-4"></i>
+          <p class="text-red-700 mb-4">{{ error }}</p>
+          <button pButton label="إعادة المحاولة" icon="pi pi-refresh" 
+                  class="p-button-outlined p-button-danger" (click)="loadUnits()"></button>
         </div>
       }
       
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الكود</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الاسم</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الاسم بالإنجليزية</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الحالة</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y">
-            @for (unit of units; track unit.id) {
-              <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm font-medium">{{ unit.code }}</td>
-                <td class="px-6 py-4 text-sm">{{ unit.name }}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">{{ unit.name_en || '-' }}</td>
-                <td class="px-6 py-4 text-sm">
-                  <span [class]="unit.is_active ? 'px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs' : 'px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs'">
-                    {{ unit.is_active ? 'نشط' : 'غير نشط' }}
-                  </span>
+      <!-- Data Table -->
+      @if (!loading && !error) {
+        <p-card>
+          <p-table [value]="units" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" [rowsPerPageOptions]="[10, 25, 50]"
+                   currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords} وحدة"
+                   styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="code">الكود <p-sortIcon field="code"></p-sortIcon></th>
+                <th pSortableColumn="name">الاسم <p-sortIcon field="name"></p-sortIcon></th>
+                <th>الرمز</th>
+                <th pSortableColumn="is_active">الحالة <p-sortIcon field="is_active"></p-sortIcon></th>
+                <th>الإجراءات</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-unit>
+              <tr>
+                <td class="font-medium">{{ unit.code }}</td>
+                <td>{{ unit.name }}</td>
+                <td class="text-gray-500">{{ unit.symbol }}</td>
+                <td>
+                  <p-tag [value]="unit.is_active ? 'نشط' : 'غير نشط'" 
+                         [severity]="unit.is_active ? 'success' : 'danger'"></p-tag>
                 </td>
-                <td class="px-6 py-4 text-sm">
+                <td>
                   <div class="flex gap-2">
-                    <button (click)="editUnit(unit)" class="text-blue-600 hover:text-blue-800">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button (click)="deleteUnit(unit)" class="text-red-600 hover:text-red-800">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info"
+                            (click)="editUnit(unit)" pTooltip="تعديل"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                            (click)="confirmDelete(unit)" pTooltip="حذف"></button>
                   </div>
                 </td>
               </tr>
-            } @empty {
-              <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">لا توجد وحدات قياس</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center py-8">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
+                  <p class="text-gray-500">لا توجد وحدات قياس</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      }
+      
+      <!-- Form Dialog -->
+      <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '450px'}"
+                [header]="editingUnit ? 'تعديل وحدة قياس' : 'إضافة وحدة قياس'" [closable]="true">
+        <div class="space-y-4 pt-4">
+          <div class="flex flex-col gap-2">
+            <label class="font-medium">الكود <span class="text-red-500">*</span></label>
+            <input pInputText [(ngModel)]="formData.code" class="w-full" />
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <label class="font-medium">الاسم بالعربية <span class="text-red-500">*</span></label>
+            <input pInputText [(ngModel)]="formData.name" class="w-full" />
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <label class="font-medium">الاسم بالإنجليزية</label>
+            <input pInputText [(ngModel)]="formData.name_en" class="w-full" />
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <label class="font-medium">الرمز <span class="text-red-500">*</span></label>
+            <input pInputText [(ngModel)]="formData.symbol" class="w-full" />
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <p-checkbox [(ngModel)]="formData.is_active" [binary]="true" inputId="is_active"></p-checkbox>
+            <label for="is_active">نشط</label>
+          </div>
+        </div>
+        
+        <ng-template pTemplate="footer">
+          <div class="flex gap-2 justify-end">
+            <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" 
+                    (click)="showForm = false" [disabled]="saving"></button>
+            <button pButton [label]="editingUnit ? 'تحديث' : 'حفظ'" icon="pi pi-check" 
+                    (click)="saveUnit()" [loading]="saving"></button>
+          </div>
+        </ng-template>
+      </p-dialog>
     </div>
   `
 })
 export class UnitsListComponent implements OnInit {
   private unitsService = inject(UnitsService);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
+  
   units: Unit[] = [];
   showForm = false;
+  loading = true;
+  saving = false;
+  error: string | null = null;
   editingUnit: Unit | null = null;
-  formData: Partial<Unit> = { code: '', name: '', name_en: '', is_active: true };
+  formData: Partial<Unit> = this.getEmptyForm();
 
-  ngOnInit() { this.loadUnits(); }
+  ngOnInit() {
+    this.loadUnits();
+  }
+
+  getEmptyForm(): Partial<Unit> {
+    return {
+      code: '',
+      name: '',
+      name_en: '',
+      symbol: '',
+      is_active: true
+    };
+  }
 
   loadUnits() {
+    this.loading = true;
+    this.error = null;
+    
     this.unitsService.getAll({ limit: 100 }).subscribe({
-      next: (res) => this.units = res.data,
-      error: (err) => console.error('Error:', err)
+      next: (res) => {
+        this.units = res.data;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'حدث خطأ أثناء تحميل وحدات القياس';
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: this.error || 'خطأ غير معروف'
+        });
+      }
     });
   }
 
-  resetForm() { this.formData = { code: '', name: '', name_en: '', is_active: true }; }
+  openNew() {
+    this.editingUnit = null;
+    this.formData = this.getEmptyForm();
+    this.showForm = true;
+  }
 
   editUnit(unit: Unit) {
     this.editingUnit = unit;
@@ -128,15 +214,70 @@ export class UnitsListComponent implements OnInit {
   }
 
   saveUnit() {
+    if (!this.formData.code || !this.formData.name || !this.formData.symbol) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'تنبيه',
+        detail: 'يرجى ملء الحقول المطلوبة'
+      });
+      return;
+    }
+    
+    this.saving = true;
+    
     const request = this.editingUnit
       ? this.unitsService.update(this.editingUnit.id, this.formData)
       : this.unitsService.create(this.formData);
-    request.subscribe({ next: () => { this.showForm = false; this.loadUnits(); }, error: (err) => console.error('Error:', err) });
+    
+    request.subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'نجاح',
+          detail: this.editingUnit ? 'تم تحديث الوحدة بنجاح' : 'تم إضافة الوحدة بنجاح'
+        });
+        this.showForm = false;
+        this.saving = false;
+        this.loadUnits();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: err.error?.message || 'حدث خطأ أثناء حفظ الوحدة'
+        });
+      }
+    });
   }
 
-  deleteUnit(unit: Unit) {
-    if (confirm(`هل أنت متأكد من حذف "${unit.name}"؟`)) {
-      this.unitsService.delete(unit.id).subscribe({ next: () => this.loadUnits(), error: (err) => console.error('Error:', err) });
-    }
+  confirmDelete(unit: Unit) {
+    this.confirmationService.confirm({
+      message: `هل أنت متأكد من حذف الوحدة "${unit.name}"؟`,
+      header: 'تأكيد الحذف',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'نعم، احذف',
+      rejectLabel: 'إلغاء',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.unitsService.delete(unit.id).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'نجاح',
+              detail: 'تم حذف الوحدة بنجاح'
+            });
+            this.loadUnits();
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'خطأ',
+              detail: err.error?.message || 'حدث خطأ أثناء حذف الوحدة'
+            });
+          }
+        });
+      }
+    });
   }
 }

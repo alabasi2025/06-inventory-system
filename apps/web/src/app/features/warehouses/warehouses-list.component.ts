@@ -3,159 +3,253 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WarehousesService, Warehouse } from '../../core/services/warehouses.service';
 
+// PrimeNG Modules
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { CardModule } from 'primeng/card';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService, ConfirmationService } from 'primeng/api';
+
 @Component({
   selector: 'app-warehouses-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, FormsModule,
+    TableModule, ButtonModule, DialogModule, InputTextModule,
+    Select, CheckboxModule, ToastModule, ConfirmDialogModule,
+    TagModule, CardModule, SkeletonModule
+  ],
+  providers: [MessageService, ConfirmationService],
   template: `
+    <p-toast position="top-left"></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+    
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-800">المستودعات</h1>
-        <button (click)="showForm = true; editing = null; resetForm()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          إضافة مستودع
-        </button>
+        <button pButton label="إضافة مستودع" icon="pi pi-plus" 
+                (click)="openNew()" class="p-button-primary"></button>
       </div>
       
-      @if (showForm) {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white rounded-xl p-6 w-full max-w-lg">
-            <h2 class="text-xl font-bold mb-4">{{ editing ? 'تعديل' : 'إضافة' }} مستودع</h2>
-            <form (ngSubmit)="save()" class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الكود</label>
-                  <input type="text" [(ngModel)]="formData.code" name="code" required
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">النوع</label>
-                  <select [(ngModel)]="formData.type" name="type" required
-                          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    <option value="main">رئيسي</option>
-                    <option value="sub">فرعي</option>
-                    <option value="transit">عبور</option>
-                  </select>
-                </div>
+      @if (loading) {
+        <p-card>
+          <div class="space-y-3">
+            @for (i of [1,2,3,4,5]; track i) {
+              <div class="flex gap-4">
+                <p-skeleton width="10%" height="2rem"></p-skeleton>
+                <p-skeleton width="25%" height="2rem"></p-skeleton>
+                <p-skeleton width="15%" height="2rem"></p-skeleton>
+                <p-skeleton width="20%" height="2rem"></p-skeleton>
+                <p-skeleton width="15%" height="2rem"></p-skeleton>
               </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الاسم بالعربية</label>
-                  <input type="text" [(ngModel)]="formData.name" name="name" required
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الاسم بالإنجليزية</label>
-                  <input type="text" [(ngModel)]="formData.name_en" name="name_en"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">الموقع</label>
-                <input type="text" [(ngModel)]="formData.location" name="location"
-                       class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">اسم المسؤول</label>
-                  <input type="text" [(ngModel)]="formData.manager_name" name="manager_name"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">الهاتف</label>
-                  <input type="text" [(ngModel)]="formData.phone" name="phone"
-                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" [(ngModel)]="formData.is_active" name="is_active" id="is_active"
-                       class="rounded border-gray-300 text-blue-600">
-                <label for="is_active" class="text-sm text-gray-700">نشط</label>
-              </div>
-              <div class="flex gap-3 pt-4">
-                <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                  {{ editing ? 'تحديث' : 'حفظ' }}
-                </button>
-                <button type="button" (click)="showForm = false"
-                        class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">إلغاء</button>
-              </div>
-            </form>
+            }
           </div>
+        </p-card>
+      }
+      
+      @if (error && !loading) {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <i class="pi pi-exclamation-circle text-red-500 text-4xl mb-4"></i>
+          <p class="text-red-700 mb-4">{{ error }}</p>
+          <button pButton label="إعادة المحاولة" icon="pi pi-refresh" 
+                  class="p-button-outlined p-button-danger" (click)="load()"></button>
         </div>
       }
       
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الكود</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الاسم</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">النوع</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الموقع</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">المسؤول</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الحالة</th>
-              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y">
-            @for (w of warehouses; track w.id) {
-              <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm font-medium">{{ w.code }}</td>
-                <td class="px-6 py-4 text-sm">{{ w.name }}</td>
-                <td class="px-6 py-4 text-sm">{{ getTypeName(w.type) }}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">{{ w.location || '-' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">{{ w.manager_name || '-' }}</td>
-                <td class="px-6 py-4 text-sm">
-                  <span [class]="w.is_active ? 'px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs' : 'px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs'">
-                    {{ w.is_active ? 'نشط' : 'غير نشط' }}
-                  </span>
+      @if (!loading && !error) {
+        <p-card>
+          <p-table [value]="warehouses" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" [rowsPerPageOptions]="[10, 25, 50]"
+                   currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords} مستودع"
+                   styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="code">الكود</th>
+                <th pSortableColumn="name">الاسم</th>
+                <th>النوع</th>
+                <th>الموقع</th>
+                <th>المسؤول</th>
+                <th pSortableColumn="is_active">الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-w>
+              <tr>
+                <td class="font-medium">{{ w.code }}</td>
+                <td>{{ w.name }}</td>
+                <td>{{ getTypeName(w.type) }}</td>
+                <td class="text-gray-500">{{ w.location || '-' }}</td>
+                <td class="text-gray-500">{{ w.manager_name || '-' }}</td>
+                <td>
+                  <p-tag [value]="w.is_active ? 'نشط' : 'غير نشط'" 
+                         [severity]="w.is_active ? 'success' : 'danger'"></p-tag>
                 </td>
-                <td class="px-6 py-4 text-sm">
+                <td>
                   <div class="flex gap-2">
-                    <button (click)="edit(w)" class="text-blue-600 hover:text-blue-800">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button (click)="remove(w)" class="text-red-600 hover:text-red-800">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info"
+                            (click)="edit(w)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                            (click)="confirmDelete(w)"></button>
                   </div>
                 </td>
               </tr>
-            } @empty {
-              <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">لا توجد مستودعات</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center py-8">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
+                  <p class="text-gray-500">لا توجد مستودعات</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      }
+      
+      <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '600px'}"
+                [header]="editing ? 'تعديل مستودع' : 'إضافة مستودع'" [closable]="true">
+        <div class="space-y-4 pt-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الكود <span class="text-red-500">*</span></label>
+              <input pInputText [(ngModel)]="formData.code" class="w-full" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">النوع <span class="text-red-500">*</span></label>
+              <p-select [options]="warehouseTypes" [(ngModel)]="formData.type"
+                          optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الاسم بالعربية <span class="text-red-500">*</span></label>
+              <input pInputText [(ngModel)]="formData.name" class="w-full" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الاسم بالإنجليزية</label>
+              <input pInputText [(ngModel)]="formData.name_en" class="w-full" />
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <label class="font-medium">الموقع</label>
+            <input pInputText [(ngModel)]="formData.location" class="w-full" />
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">اسم المسؤول</label>
+              <input pInputText [(ngModel)]="formData.manager_name" class="w-full" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium">الهاتف</label>
+              <input pInputText [(ngModel)]="formData.phone" class="w-full" />
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <p-checkbox [(ngModel)]="formData.is_active" [binary]="true" inputId="is_active"></p-checkbox>
+            <label for="is_active">نشط</label>
+          </div>
+        </div>
+        
+        <ng-template pTemplate="footer">
+          <div class="flex gap-2 justify-end">
+            <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" 
+                    (click)="showForm = false" [disabled]="saving"></button>
+            <button pButton [label]="editing ? 'تحديث' : 'حفظ'" icon="pi pi-check" 
+                    (click)="save()" [loading]="saving"></button>
+          </div>
+        </ng-template>
+      </p-dialog>
     </div>
   `
 })
 export class WarehousesListComponent implements OnInit {
   private service = inject(WarehousesService);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
+  
   warehouses: Warehouse[] = [];
   showForm = false;
+  loading = true;
+  saving = false;
+  error: string | null = null;
   editing: Warehouse | null = null;
-  formData: Partial<Warehouse> = { code: '', name: '', name_en: '', type: 'main', location: '', manager_name: '', phone: '', is_active: true };
+  formData: Partial<Warehouse> = this.getEmptyForm();
+  
+  warehouseTypes = [
+    { label: 'رئيسي', value: 'main' },
+    { label: 'فرعي', value: 'sub' },
+    { label: 'عبور', value: 'transit' }
+  ];
 
   ngOnInit() { this.load(); }
-  load() { this.service.getAll({ limit: 100 }).subscribe({ next: (res) => this.warehouses = res.data, error: (err) => console.error(err) }); }
-  resetForm() { this.formData = { code: '', name: '', name_en: '', type: 'main', location: '', manager_name: '', phone: '', is_active: true }; }
+
+  getEmptyForm(): Partial<Warehouse> {
+    return { code: '', name: '', name_en: '', type: 'main', location: '', manager_name: '', phone: '', is_active: true };
+  }
+
+  load() {
+    this.loading = true;
+    this.error = null;
+    this.service.getAll({ limit: 100 }).subscribe({
+      next: (res) => { this.warehouses = res.data; this.loading = false; },
+      error: (err) => {
+        this.error = err.error?.message || 'حدث خطأ أثناء تحميل المستودعات';
+        this.loading = false;
+        this.messageService.add({ severity: 'error', summary: 'خطأ', detail: this.error || 'خطأ' });
+      }
+    });
+  }
+
+  openNew() { this.editing = null; this.formData = this.getEmptyForm(); this.showForm = true; }
+
   edit(w: Warehouse) { this.editing = w; this.formData = { ...w }; this.showForm = true; }
+
   save() {
-    const req = this.editing ? this.service.update(this.editing.id, this.formData) : this.service.create(this.formData);
-    req.subscribe({ next: () => { this.showForm = false; this.load(); }, error: (err) => console.error(err) });
-  }
-  remove(w: Warehouse) {
-    if (confirm(`هل أنت متأكد من حذف "${w.name}"؟`)) {
-      this.service.delete(w.id).subscribe({ next: () => this.load(), error: (err) => console.error(err) });
+    if (!this.formData.code || !this.formData.name || !this.formData.type) {
+      this.messageService.add({ severity: 'warn', summary: 'تنبيه', detail: 'يرجى ملء الحقول المطلوبة' });
+      return;
     }
+    this.saving = true;
+    const req = this.editing ? this.service.update(this.editing.id, this.formData) : this.service.create(this.formData);
+    req.subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'نجاح', detail: this.editing ? 'تم التحديث' : 'تم الإضافة' });
+        this.showForm = false; this.saving = false; this.load();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.messageService.add({ severity: 'error', summary: 'خطأ', detail: err.error?.message || 'حدث خطأ' });
+      }
+    });
   }
+
+  confirmDelete(w: Warehouse) {
+    this.confirmationService.confirm({
+      message: `هل أنت متأكد من حذف "${w.name}"؟`,
+      header: 'تأكيد الحذف',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'نعم',
+      rejectLabel: 'إلغاء',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.service.delete(w.id).subscribe({
+          next: () => { this.messageService.add({ severity: 'success', summary: 'نجاح', detail: 'تم الحذف' }); this.load(); },
+          error: (err) => this.messageService.add({ severity: 'error', summary: 'خطأ', detail: err.error?.message || 'خطأ' })
+        });
+      }
+    });
+  }
+
   getTypeName(type: string): string { return { main: 'رئيسي', sub: 'فرعي', transit: 'عبور' }[type] || type; }
 }
