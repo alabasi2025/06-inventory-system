@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-
 import { MenuItem } from 'primeng/api';
 import { filter } from 'rxjs/operators';
 
@@ -13,40 +12,54 @@ import { filter } from 'rxjs/operators';
     <div class="layout-wrapper" [class.sidebar-collapsed]="sidebarCollapsed">
       <!-- Sidebar -->
       <aside class="sidebar">
+        <!-- Logo Section -->
         <div class="sidebar-header">
-          <div class="logo" *ngIf="!sidebarCollapsed">
-            <i class="pi pi-warehouse"></i>
-            <span>نظام المخازن</span>
+          <div class="logo-container" *ngIf="!sidebarCollapsed">
+            <div class="logo-icon">
+              <i class="pi pi-box"></i>
+            </div>
+            <div class="logo-text">
+              <span class="logo-title">نظام المخازن</span>
+              <span class="logo-subtitle">Inventory System</span>
+            </div>
           </div>
           <div class="logo-mini" *ngIf="sidebarCollapsed">
-            <i class="pi pi-warehouse"></i>
+            <i class="pi pi-box"></i>
           </div>
         </div>
         
+        <!-- Navigation -->
         <nav class="sidebar-nav">
           <ul class="nav-list">
             <li class="nav-item" *ngFor="let item of menuItems">
+              <!-- Simple Link -->
               <a *ngIf="!item.items" 
                  [routerLink]="item.routerLink" 
                  routerLinkActive="active"
                  class="nav-link"
                  [title]="sidebarCollapsed ? item.label : ''">
-                <i [class]="item.icon"></i>
-                <span *ngIf="!sidebarCollapsed">{{ item.label }}</span>
+                <div class="nav-icon">
+                  <i [class]="item.icon"></i>
+                </div>
+                <span class="nav-text" *ngIf="!sidebarCollapsed">{{ item.label }}</span>
+                <div class="active-indicator"></div>
               </a>
               
+              <!-- Group with Submenu -->
               <div *ngIf="item.items" class="nav-group">
                 <div class="nav-group-header" 
                      (click)="toggleGroup(item)"
                      [class.expanded]="item.expanded">
-                  <i [class]="item.icon"></i>
-                  <span *ngIf="!sidebarCollapsed">{{ item.label }}</span>
+                  <div class="nav-icon">
+                    <i [class]="item.icon"></i>
+                  </div>
+                  <span class="nav-text" *ngIf="!sidebarCollapsed">{{ item.label }}</span>
                   <i *ngIf="!sidebarCollapsed" 
-                     class="pi expand-icon"
+                     class="expand-arrow pi"
                      [class.pi-chevron-down]="item.expanded"
                      [class.pi-chevron-left]="!item.expanded"></i>
                 </div>
-                <ul class="nav-sublist" *ngIf="item.expanded && !sidebarCollapsed">
+                <ul class="nav-sublist" [class.show]="item.expanded && !sidebarCollapsed">
                   <li *ngFor="let subItem of item.items">
                     <a [routerLink]="subItem.routerLink" 
                        routerLinkActive="active"
@@ -61,8 +74,18 @@ import { filter } from 'rxjs/operators';
           </ul>
         </nav>
         
+        <!-- Sidebar Footer -->
         <div class="sidebar-footer">
-          <button class="toggle-btn" (click)="toggleSidebar()">
+          <div class="user-card" *ngIf="!sidebarCollapsed">
+            <div class="user-avatar">
+              <i class="pi pi-user"></i>
+            </div>
+            <div class="user-details">
+              <span class="user-name">مدير النظام</span>
+              <span class="user-role">Administrator</span>
+            </div>
+          </div>
+          <button class="collapse-btn" (click)="toggleSidebar()">
             <i class="pi" [class.pi-angle-right]="sidebarCollapsed" [class.pi-angle-left]="!sidebarCollapsed"></i>
           </button>
         </div>
@@ -70,23 +93,36 @@ import { filter } from 'rxjs/operators';
 
       <!-- Main Content -->
       <div class="main-wrapper">
+        <!-- Top Bar -->
         <header class="topbar">
-          <div class="topbar-start">
-            <button class="mobile-toggle" (click)="toggleSidebar()">
+          <div class="topbar-right">
+            <button class="menu-toggle" (click)="toggleSidebar()">
               <i class="pi pi-bars"></i>
             </button>
-            <h1 class="page-title">{{ currentPageTitle }}</h1>
+            <div class="breadcrumb">
+              <span class="page-title">{{ currentPageTitle }}</span>
+            </div>
           </div>
-          <div class="topbar-end">
-            <div class="user-info">
-              <span class="user-name">مدير النظام</span>
-              <div class="user-avatar">
+          <div class="topbar-left">
+            <div class="topbar-actions">
+              <button class="action-btn" title="الإشعارات">
+                <i class="pi pi-bell"></i>
+                <span class="badge">3</span>
+              </button>
+              <button class="action-btn" title="الإعدادات">
+                <i class="pi pi-cog"></i>
+              </button>
+            </div>
+            <div class="user-menu">
+              <span class="user-greeting">مرحباً، مدير النظام</span>
+              <div class="avatar-small">
                 <i class="pi pi-user"></i>
               </div>
             </div>
           </div>
         </header>
         
+        <!-- Page Content -->
         <main class="main-content">
           <router-outlet></router-outlet>
         </main>
@@ -96,27 +132,43 @@ import { filter } from 'rxjs/operators';
   styles: [`
     :host {
       --sidebar-width: 320px;
-      --sidebar-collapsed-width: 70px;
-      --topbar-height: 64px;
-      --primary-color: #1e40af;
-      --primary-dark: #1e3a8a;
-      --primary-light: #3b82f6;
-      --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-      --text-light: #e2e8f0;
-      --text-muted: #94a3b8;
-      --border-color: rgba(255, 255, 255, 0.1);
-      --hover-bg: rgba(255, 255, 255, 0.08);
-      --active-bg: rgba(59, 130, 246, 0.2);
+      --sidebar-collapsed-width: 80px;
+      --topbar-height: 70px;
+      
+      /* Modern Color Palette */
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.3);
+      
+      --sidebar-bg: #0f172a;
+      --sidebar-surface: #1e293b;
+      --sidebar-border: rgba(255, 255, 255, 0.08);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --hover-bg: rgba(255, 255, 255, 0.05);
+      --active-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1));
+      
       --content-bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     .layout-wrapper {
       display: flex;
       min-height: 100vh;
       direction: rtl;
+      background: var(--content-bg);
     }
 
-    /* Sidebar Styles */
+    /* ==================== SIDEBAR ==================== */
     .sidebar {
       width: var(--sidebar-width);
       background: var(--sidebar-bg);
@@ -127,45 +179,98 @@ import { filter } from 'rxjs/operators';
       right: 0;
       height: 100vh;
       z-index: 1000;
-      transition: width 0.3s ease;
-      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 1px solid var(--sidebar-border);
     }
 
     .sidebar-collapsed .sidebar {
       width: var(--sidebar-collapsed-width);
     }
 
+    /* Logo Section */
     .sidebar-header {
       padding: 1.5rem;
-      border-bottom: 1px solid var(--border-color);
-      min-height: 80px;
+      border-bottom: 1px solid var(--sidebar-border);
+      min-height: 90px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .logo {
+    .logo-container {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      color: white;
-      font-size: 1.25rem;
-      font-weight: 700;
+      gap: 1rem;
     }
 
-    .logo i, .logo-mini i {
-      font-size: 1.75rem;
-      color: var(--primary-light);
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .logo-icon i {
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
     .logo-mini {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .logo-mini i {
+      font-size: 1.5rem;
       color: white;
     }
 
+    /* Navigation */
     .sidebar-nav {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem 0;
+      padding: 1rem 0.75rem;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+      background: var(--sidebar-border);
+      border-radius: 4px;
     }
 
     .nav-list {
@@ -175,7 +280,7 @@ import { filter } from 'rxjs/operators';
     }
 
     .nav-item {
-      margin: 0.25rem 0.75rem;
+      margin-bottom: 0.25rem;
     }
 
     .nav-link, .nav-group-header {
@@ -183,53 +288,108 @@ import { filter } from 'rxjs/operators';
       align-items: center;
       gap: 0.875rem;
       padding: 0.875rem 1rem;
-      color: var(--text-light);
+      color: var(--text-secondary);
       text-decoration: none;
-      border-radius: 0.5rem;
+      border-radius: 10px;
       transition: all 0.2s ease;
       cursor: pointer;
-      font-size: 0.9375rem;
-      white-space: nowrap;
+      position: relative;
       overflow: hidden;
+    }
+
+    .nav-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: var(--sidebar-surface);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .nav-icon i {
+      font-size: 1.125rem;
+      color: var(--text-muted);
+      transition: color 0.2s ease;
+    }
+
+    .nav-text {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      white-space: nowrap;
     }
 
     .nav-link:hover, .nav-group-header:hover {
       background: var(--hover-bg);
+      color: var(--text-primary);
+    }
+
+    .nav-link:hover .nav-icon, .nav-group-header:hover .nav-icon {
+      background: var(--primary);
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .nav-link:hover .nav-icon i, .nav-group-header:hover .nav-icon i {
       color: white;
     }
 
     .nav-link.active {
       background: var(--active-bg);
-      color: var(--primary-light);
-      font-weight: 600;
+      color: var(--text-primary);
     }
 
-    .nav-link.active i {
-      color: var(--primary-light);
+    .nav-link.active .nav-icon {
+      background: var(--primary);
+      box-shadow: 0 4px 12px var(--primary-glow);
     }
 
-    .nav-link i, .nav-group-header i:first-child {
-      font-size: 1.125rem;
-      width: 24px;
-      text-align: center;
-      color: var(--text-muted);
-      transition: color 0.2s ease;
+    .nav-link.active .nav-icon i {
+      color: white;
     }
 
-    .nav-link:hover i, .nav-group-header:hover i {
-      color: var(--primary-light);
+    .active-indicator {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 0;
+      background: var(--primary);
+      border-radius: 0 4px 4px 0;
+      transition: height 0.2s ease;
     }
 
-    .expand-icon {
+    .nav-link.active .active-indicator {
+      height: 60%;
+    }
+
+    /* Expand Arrow */
+    .expand-arrow {
       margin-right: auto;
-      font-size: 0.75rem !important;
-      transition: transform 0.2s ease;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: transform 0.3s ease;
     }
 
+    .nav-group-header.expanded .expand-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* Submenu */
     .nav-sublist {
       list-style: none;
-      padding: 0.5rem 0 0.5rem 1rem;
+      padding: 0;
       margin: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .nav-sublist.show {
+      max-height: 500px;
+      padding: 0.5rem 0 0.5rem 3.5rem;
     }
 
     .nav-sublink {
@@ -239,41 +399,107 @@ import { filter } from 'rxjs/operators';
       padding: 0.625rem 1rem;
       color: var(--text-muted);
       text-decoration: none;
-      border-radius: 0.375rem;
+      border-radius: 8px;
       font-size: 0.875rem;
       transition: all 0.2s ease;
-      margin: 0.125rem 0;
+      margin-bottom: 0.25rem;
+      position: relative;
+    }
+
+    .nav-sublink::before {
+      content: '';
+      position: absolute;
+      right: -1.5rem;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      border: 2px solid var(--sidebar-border);
+      border-radius: 50%;
+      transform: translateY(-50%);
+      transition: all 0.2s ease;
     }
 
     .nav-sublink:hover {
+      color: var(--text-primary);
       background: var(--hover-bg);
-      color: white;
+    }
+
+    .nav-sublink:hover::before {
+      border-color: var(--primary);
+      background: var(--primary);
     }
 
     .nav-sublink.active {
-      background: var(--active-bg);
       color: var(--primary-light);
-      font-weight: 500;
+      background: var(--active-bg);
+    }
+
+    .nav-sublink.active::before {
+      border-color: var(--primary);
+      background: var(--primary);
     }
 
     .nav-sublink i {
       font-size: 0.875rem;
       width: 20px;
-      text-align: center;
     }
 
+    /* Sidebar Footer */
     .sidebar-footer {
       padding: 1rem;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid var(--sidebar-border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
-    .toggle-btn {
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--sidebar-surface);
+      border-radius: 12px;
+    }
+
+    .user-avatar {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-avatar i {
+      font-size: 1.25rem;
+      color: white;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .user-role {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .collapse-btn {
       width: 100%;
       padding: 0.75rem;
-      background: var(--hover-bg);
-      border: none;
-      border-radius: 0.5rem;
-      color: var(--text-light);
+      background: var(--sidebar-surface);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 10px;
+      color: var(--text-secondary);
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
@@ -281,28 +507,30 @@ import { filter } from 'rxjs/operators';
       justify-content: center;
     }
 
-    .toggle-btn:hover {
-      background: var(--active-bg);
+    .collapse-btn:hover {
+      background: var(--hover-bg);
       color: var(--primary-light);
+      border-color: var(--primary);
     }
 
-    /* Main Content Styles */
+    /* ==================== MAIN CONTENT ==================== */
     .main-wrapper {
       flex: 1;
       margin-right: var(--sidebar-width);
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      transition: margin-right 0.3s ease;
+      transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .sidebar-collapsed .main-wrapper {
       margin-right: var(--sidebar-collapsed-width);
     }
 
+    /* Top Bar */
     .topbar {
       height: var(--topbar-height);
-      background: white;
+      background: var(--card-bg);
       border-bottom: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
@@ -311,68 +539,126 @@ import { filter } from 'rxjs/operators';
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow);
     }
 
-    .topbar-start {
+    .topbar-right {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
-    .mobile-toggle {
+    .menu-toggle {
       display: none;
       background: none;
       border: none;
       font-size: 1.25rem;
-      color: #64748b;
+      color: var(--text-muted);
       cursor: pointer;
       padding: 0.5rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .menu-toggle:hover {
+      background: #f1f5f9;
+      color: var(--primary);
     }
 
     .page-title {
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 1.375rem;
+      font-weight: 700;
       color: #1e293b;
       margin: 0;
     }
 
-    .topbar-end {
+    .topbar-left {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 1.5rem;
     }
 
-    .user-info {
+    .topbar-actions {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
-    .user-name {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #475569;
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    .action-btn {
+      width: 42px;
+      height: 42px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .action-btn:hover {
+      background: var(--primary);
       color: white;
     }
 
+    .action-btn .badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 18px;
+      height: 18px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.625rem;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .user-greeting {
+      font-size: 0.875rem;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .avatar-small {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-small i {
+      font-size: 1rem;
+      color: white;
+    }
+
+    /* Main Content */
     .main-content {
       flex: 1;
       padding: 1.5rem;
       background: var(--content-bg);
     }
 
-    /* Responsive */
+    /* ==================== RESPONSIVE ==================== */
     @media (max-width: 1024px) {
       .sidebar {
         transform: translateX(100%);
@@ -383,34 +669,30 @@ import { filter } from 'rxjs/operators';
       }
 
       .main-wrapper {
-        margin-right: 0;
+        margin-right: 0 !important;
       }
 
-      .mobile-toggle {
-        display: block;
+      .menu-toggle {
+        display: flex;
       }
 
-      .sidebar-collapsed .sidebar {
-        transform: translateX(100%);
+      .user-greeting {
+        display: none;
       }
     }
 
-    /* Scrollbar Styles */
-    .sidebar-nav::-webkit-scrollbar {
-      width: 4px;
-    }
+    @media (max-width: 640px) {
+      .topbar {
+        padding: 0 1rem;
+      }
 
-    .sidebar-nav::-webkit-scrollbar-track {
-      background: transparent;
-    }
+      .main-content {
+        padding: 1rem;
+      }
 
-    .sidebar-nav::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
-    }
-
-    .sidebar-nav::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
+      .topbar-actions {
+        display: none;
+      }
     }
   `]
 })
@@ -419,10 +701,10 @@ export class LayoutComponent implements OnInit {
   currentPageTitle = 'لوحة التحكم';
   
   menuItems: any[] = [
-    { 
-      label: 'لوحة التحكم', 
-      icon: 'pi pi-home', 
-      routerLink: '/dashboard' 
+    {
+      label: 'لوحة التحكم',
+      icon: 'pi pi-home',
+      routerLink: '/dashboard'
     },
     {
       label: 'البيانات الأساسية',
@@ -433,20 +715,16 @@ export class LayoutComponent implements OnInit {
         { label: 'وحدات القياس', icon: 'pi pi-sliders-h', routerLink: '/units' },
         { label: 'المستودعات', icon: 'pi pi-building', routerLink: '/warehouses' },
         { label: 'الأصناف', icon: 'pi pi-box', routerLink: '/items' },
+        { label: 'الموردين', icon: 'pi pi-users', routerLink: '/suppliers' }
       ]
-    },
-    { 
-      label: 'الموردين', 
-      icon: 'pi pi-users', 
-      routerLink: '/suppliers' 
     },
     {
       label: 'العمليات',
       icon: 'pi pi-sync',
       expanded: false,
       items: [
-        { label: 'حركات المخزون', icon: 'pi pi-arrows-h', routerLink: '/movements' },
-        { label: 'أوامر الشراء', icon: 'pi pi-shopping-cart', routerLink: '/purchase-orders' },
+        { label: 'حركات المخزون', icon: 'pi pi-arrow-right-arrow-left', routerLink: '/movements' },
+        { label: 'أوامر الشراء', icon: 'pi pi-shopping-cart', routerLink: '/purchase-orders' }
       ]
     },
     {
@@ -455,36 +733,35 @@ export class LayoutComponent implements OnInit {
       expanded: false,
       items: [
         { label: 'تقرير المخزون', icon: 'pi pi-file', routerLink: '/reports/inventory' },
-        { label: 'تقرير الحركات', icon: 'pi pi-file', routerLink: '/reports/movements' },
+        { label: 'تقرير الحركات', icon: 'pi pi-file', routerLink: '/reports/movements' }
       ]
-    },
+    }
   ];
-
-  private pageTitles: { [key: string]: string } = {
-    '/dashboard': 'لوحة التحكم',
-    '/categories': 'التصنيفات',
-    '/units': 'وحدات القياس',
-    '/warehouses': 'المستودعات',
-    '/items': 'الأصناف',
-    '/suppliers': 'الموردين',
-    '/movements': 'حركات المخزون',
-    '/purchase-orders': 'أوامر الشراء',
-  };
 
   constructor(private router: Router) {}
 
   ngOnInit() {
-    this.updatePageTitle(this.router.url);
-    
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      this.updatePageTitle(event.urlAfterRedirects);
+    ).subscribe(() => {
+      this.updatePageTitle();
     });
+    this.updatePageTitle();
   }
 
-  updatePageTitle(url: string) {
-    this.currentPageTitle = this.pageTitles[url] || 'نظام المخازن';
+  updatePageTitle() {
+    const url = this.router.url;
+    const titles: { [key: string]: string } = {
+      '/dashboard': 'لوحة التحكم',
+      '/categories': 'التصنيفات',
+      '/units': 'وحدات القياس',
+      '/warehouses': 'المستودعات',
+      '/items': 'الأصناف',
+      '/suppliers': 'الموردين',
+      '/movements': 'حركات المخزون',
+      '/purchase-orders': 'أوامر الشراء'
+    };
+    this.currentPageTitle = titles[url] || 'نظام المخازن';
   }
 
   toggleSidebar() {
@@ -492,8 +769,6 @@ export class LayoutComponent implements OnInit {
   }
 
   toggleGroup(item: any) {
-    if (!this.sidebarCollapsed) {
-      item.expanded = !item.expanded;
-    }
+    item.expanded = !item.expanded;
   }
 }
