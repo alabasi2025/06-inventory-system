@@ -3,195 +3,268 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReportsService, DashboardData } from '../../core/services/reports.service';
 
+// PrimeNG Modules
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MessageModule } from 'primeng/message';
+import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService } from 'primeng/api';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    CardModule,
+    ButtonModule,
+    TableModule,
+    ProgressSpinnerModule,
+    MessageModule,
+    ToastModule,
+    SkeletonModule
+  ],
+  providers: [MessageService],
   template: `
+    <p-toast position="top-left"></p-toast>
+    
     <div class="space-y-6">
       <h1 class="text-2xl font-bold text-gray-800">لوحة التحكم</h1>
       
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-blue-500">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">إجمالي الأصناف</p>
-              <p class="text-3xl font-bold text-gray-800">{{ data?.summary?.totalItems || 0 }}</p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-              </svg>
-            </div>
-          </div>
+      <!-- Loading State -->
+      @if (loading) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          @for (i of [1,2,3,4]; track i) {
+            <p-card styleClass="shadow-sm">
+              <div class="flex items-center gap-4">
+                <p-skeleton shape="circle" size="3rem"></p-skeleton>
+                <div class="flex-1">
+                  <p-skeleton width="60%" height="1rem" styleClass="mb-2"></p-skeleton>
+                  <p-skeleton width="40%" height="2rem"></p-skeleton>
+                </div>
+              </div>
+            </p-card>
+          }
         </div>
-        
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-green-500">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">المستودعات</p>
-              <p class="text-3xl font-bold text-gray-800">{{ data?.summary?.totalWarehouses || 0 }}</p>
-            </div>
-            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-yellow-500">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">الموردين</p>
-              <p class="text-3xl font-bold text-gray-800">{{ data?.summary?.totalSuppliers || 0 }}</p>
-            </div>
-            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-red-500">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">أصناف تحت الحد الأدنى</p>
-              <p class="text-3xl font-bold text-gray-800">{{ data?.summary?.lowStockItems || 0 }}</p>
-            </div>
-            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
+      }
       
-      <!-- Second Row -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-xl shadow-sm p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">طلبات الشراء المعلقة</h3>
-            <span class="text-2xl font-bold text-orange-600">{{ data?.summary?.pendingPurchaseRequests || 0 }}</span>
-          </div>
-          <a routerLink="/purchase-requests" class="text-blue-600 text-sm hover:underline">عرض الكل</a>
+      <!-- Error State -->
+      @if (error && !loading) {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <i class="pi pi-exclamation-circle text-red-500 text-4xl mb-4"></i>
+          <p class="text-red-700 mb-4">{{ error }}</p>
+          <button pButton label="إعادة المحاولة" icon="pi pi-refresh" 
+                  class="p-button-outlined p-button-danger" (click)="loadDashboard()"></button>
         </div>
-        
-        <div class="bg-white rounded-xl shadow-sm p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">أوامر الشراء المعلقة</h3>
-            <span class="text-2xl font-bold text-purple-600">{{ data?.summary?.pendingPurchaseOrders || 0 }}</span>
-          </div>
-          <a routerLink="/purchase-orders" class="text-blue-600 text-sm hover:underline">عرض الكل</a>
-        </div>
-        
-        <div class="bg-white rounded-xl shadow-sm p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">قيمة المخزون</h3>
-            <span class="text-2xl font-bold text-green-600">{{ (data?.summary?.stockValue || 0) | number:'1.2-2' }} ر.س</span>
-          </div>
-          <a routerLink="/reports" class="text-blue-600 text-sm hover:underline">تقرير المخزون</a>
-        </div>
-      </div>
+      }
       
-      <!-- Recent Movements -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <h3 class="font-semibold text-gray-800 mb-4">آخر حركات المخزون</h3>
+      <!-- Data Loaded -->
+      @if (!loading && !error && data) {
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <p-card styleClass="shadow-sm border-r-4 border-blue-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500">إجمالي الأصناف</p>
+                <p class="text-3xl font-bold text-gray-800">{{ data.summary?.totalItems || 0 | number }}</p>
+              </div>
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="pi pi-box text-blue-600 text-xl"></i>
+              </div>
+            </div>
+          </p-card>
+          
+          <p-card styleClass="shadow-sm border-r-4 border-green-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500">المستودعات</p>
+                <p class="text-3xl font-bold text-gray-800">{{ data.summary?.totalWarehouses || 0 | number }}</p>
+              </div>
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="pi pi-building text-green-600 text-xl"></i>
+              </div>
+            </div>
+          </p-card>
+          
+          <p-card styleClass="shadow-sm border-r-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500">الموردين</p>
+                <p class="text-3xl font-bold text-gray-800">{{ data.summary?.totalSuppliers || 0 | number }}</p>
+              </div>
+              <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <i class="pi pi-users text-yellow-600 text-xl"></i>
+              </div>
+            </div>
+          </p-card>
+          
+          <p-card styleClass="shadow-sm border-r-4 border-red-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500">أصناف تحت الحد الأدنى</p>
+                <p class="text-3xl font-bold text-gray-800">{{ data.summary?.lowStockItems || 0 | number }}</p>
+              </div>
+              <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="pi pi-exclamation-triangle text-red-600 text-xl"></i>
+              </div>
+            </div>
+          </p-card>
+        </div>
         
-        @if (data?.recentMovements?.length) {
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-50">
+        <!-- Second Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <p-card styleClass="shadow-sm">
+            <ng-template pTemplate="header">
+              <div class="p-3 border-b">
+                <h3 class="font-semibold text-gray-800">طلبات الشراء المعلقة</h3>
+              </div>
+            </ng-template>
+            <div class="text-center py-4">
+              <p class="text-4xl font-bold text-orange-600 mb-2">{{ data.summary?.pendingPurchaseRequests || 0 }}</p>
+              <a routerLink="/purchase-requests" class="text-blue-500 hover:underline text-sm">
+                <i class="pi pi-arrow-left ml-1"></i> عرض الكل
+              </a>
+            </div>
+          </p-card>
+          
+          <p-card styleClass="shadow-sm">
+            <ng-template pTemplate="header">
+              <div class="p-3 border-b">
+                <h3 class="font-semibold text-gray-800">أوامر الشراء المعلقة</h3>
+              </div>
+            </ng-template>
+            <div class="text-center py-4">
+              <p class="text-4xl font-bold text-purple-600 mb-2">{{ data.summary?.pendingPurchaseOrders || 0 }}</p>
+              <a routerLink="/purchase-orders" class="text-blue-500 hover:underline text-sm">
+                <i class="pi pi-arrow-left ml-1"></i> عرض الكل
+              </a>
+            </div>
+          </p-card>
+          
+          <p-card styleClass="shadow-sm">
+            <ng-template pTemplate="header">
+              <div class="p-3 border-b">
+                <h3 class="font-semibold text-gray-800">قيمة المخزون</h3>
+              </div>
+            </ng-template>
+            <div class="text-center py-4">
+              <p class="text-4xl font-bold text-green-600 mb-2">{{ (data.summary?.stockValue || 0) | number:'1.2-2' }}</p>
+              <span class="text-gray-500">ر.س</span>
+            </div>
+          </p-card>
+        </div>
+        
+        <!-- Recent Movements Table with PrimeNG -->
+        <p-card styleClass="shadow-sm">
+          <ng-template pTemplate="header">
+            <div class="p-3 border-b flex items-center justify-between">
+              <h3 class="font-semibold text-gray-800">آخر حركات المخزون</h3>
+              <a routerLink="/movements" class="text-blue-500 hover:underline text-sm">
+                عرض الكل <i class="pi pi-arrow-left mr-1"></i>
+              </a>
+            </div>
+          </ng-template>
+          
+          @if (data.recentMovements && data.recentMovements.length > 0) {
+            <p-table [value]="data.recentMovements" [rows]="5" styleClass="p-datatable-sm p-datatable-striped">
+              <ng-template pTemplate="header">
                 <tr>
-                  <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">رقم الحركة</th>
-                  <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">النوع</th>
-                  <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">المستودع</th>
-                  <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">التاريخ</th>
-                  <th class="px-4 py-3 text-right text-sm font-medium text-gray-600">الحالة</th>
+                  <th>رقم الحركة</th>
+                  <th>النوع</th>
+                  <th>المستودع</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
                 </tr>
-              </thead>
-              <tbody class="divide-y">
-                @for (movement of data?.recentMovements; track movement.id) {
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 text-sm">{{ movement.movement_no }}</td>
-                    <td class="px-4 py-3 text-sm">{{ getMovementType(movement.type) }}</td>
-                    <td class="px-4 py-3 text-sm">{{ movement.warehouse?.name }}</td>
-                    <td class="px-4 py-3 text-sm">{{ movement.movement_date | date:'yyyy-MM-dd' }}</td>
-                    <td class="px-4 py-3 text-sm">
-                      <span [class]="getStatusClass(movement.status)">
-                        {{ getStatusLabel(movement.status) }}
-                      </span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+              </ng-template>
+              <ng-template pTemplate="body" let-movement>
+                <tr>
+                  <td class="font-medium">{{ movement.movement_no }}</td>
+                  <td>
+                    <span [class]="getMovementTypeClass(movement.type)">
+                      {{ getMovementType(movement.type) }}
+                    </span>
+                  </td>
+                  <td>{{ movement.warehouse?.name }}</td>
+                  <td>{{ movement.movement_date | date:'yyyy-MM-dd' }}</td>
+                  <td>
+                    <span [class]="getStatusClass(movement.status)">
+                      {{ getStatusLabel(movement.status) }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5" class="text-center py-8 text-gray-500">لا توجد حركات حديثة</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          } @else {
+            <div class="text-center py-8 text-gray-500">
+              <i class="pi pi-inbox text-4xl mb-3 text-gray-300"></i>
+              <p>لا توجد حركات حديثة</p>
+            </div>
+          }
+        </p-card>
+        
+        <!-- Quick Actions with PrimeNG Buttons -->
+        <p-card styleClass="shadow-sm">
+          <ng-template pTemplate="header">
+            <div class="p-3 border-b">
+              <h3 class="font-semibold text-gray-800">إجراءات سريعة</h3>
+            </div>
+          </ng-template>
+          <div class="flex flex-wrap gap-3 p-2">
+            <button pButton label="إضافة صنف" icon="pi pi-plus" 
+                    routerLink="/items" class="p-button-primary"></button>
+            <button pButton label="استلام مخزون" icon="pi pi-download" 
+                    routerLink="/movements" [queryParams]="{type: 'receipt'}" class="p-button-success"></button>
+            <button pButton label="صرف مخزون" icon="pi pi-upload" 
+                    routerLink="/movements" [queryParams]="{type: 'issue'}" class="p-button-warning"></button>
+            <button pButton label="طلب شراء جديد" icon="pi pi-shopping-cart" 
+                    routerLink="/purchase-requests" class="p-button-info"></button>
+            <button pButton label="تقارير" icon="pi pi-chart-bar" 
+                    routerLink="/reports" class="p-button-secondary"></button>
           </div>
-        } @else {
-          <p class="text-gray-500 text-center py-8">لا توجد حركات حديثة</p>
-        }
-      </div>
-      
-      <!-- Quick Actions -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <h3 class="font-semibold text-gray-800 mb-4">إجراءات سريعة</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a routerLink="/items" [queryParams]="{action: 'new'}" 
-             class="flex flex-col items-center gap-2 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            <span class="text-sm text-gray-700">إضافة صنف</span>
-          </a>
-          
-          <a routerLink="/movements" [queryParams]="{action: 'new', type: 'receipt'}"
-             class="flex flex-col items-center gap-2 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition">
-            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-            </svg>
-            <span class="text-sm text-gray-700">استلام مخزون</span>
-          </a>
-          
-          <a routerLink="/movements" [queryParams]="{action: 'new', type: 'issue'}"
-             class="flex flex-col items-center gap-2 p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition">
-            <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-            </svg>
-            <span class="text-sm text-gray-700">صرف مخزون</span>
-          </a>
-          
-          <a routerLink="/purchase-requests" [queryParams]="{action: 'new'}"
-             class="flex flex-col items-center gap-2 p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition">
-            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <span class="text-sm text-gray-700">طلب شراء جديد</span>
-          </a>
-        </div>
-      </div>
+        </p-card>
+      }
     </div>
   `
 })
 export class DashboardComponent implements OnInit {
   private reportsService = inject(ReportsService);
+  private messageService = inject(MessageService);
+  
   data: DashboardData | null = null;
+  loading = true;
+  error: string | null = null;
 
   ngOnInit() {
     this.loadDashboard();
   }
 
   loadDashboard() {
+    this.loading = true;
+    this.error = null;
+    
     this.reportsService.getDashboard().subscribe({
-      next: (data) => this.data = data,
-      error: (err) => console.error('Error loading dashboard:', err)
+      next: (data) => {
+        this.data = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.';
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ في التحميل',
+          detail: this.error || 'خطأ غير معروف',
+          life: 5000
+        });
+      }
     });
   }
 
@@ -203,6 +276,16 @@ export class DashboardComponent implements OnInit {
       'adjustment': 'تسوية'
     };
     return types[type] || type;
+  }
+
+  getMovementTypeClass(type: string): string {
+    const classes: Record<string, string> = {
+      'receipt': 'px-2 py-1 bg-green-100 text-green-700 rounded text-xs',
+      'issue': 'px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs',
+      'transfer': 'px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs',
+      'adjustment': 'px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs'
+    };
+    return classes[type] || 'px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs';
   }
 
   getStatusLabel(status: string): string {

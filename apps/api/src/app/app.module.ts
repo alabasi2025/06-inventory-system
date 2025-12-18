@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 
 // Core Modules
 import { PrismaModule } from '../prisma/prisma.module';
+import { HealthModule } from '../modules/health/health.module';
 
 // Feature Modules
 import { CategoriesModule } from '../modules/categories/categories.module';
@@ -23,6 +24,7 @@ import { ReportsModule } from '../modules/reports/reports.module';
   imports: [
     // Core
     PrismaModule,
+    HealthModule,
     
     // Master Data
     CategoriesModule,

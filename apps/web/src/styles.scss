@@ -1,1 +1,70 @@
-/* You can add global styles to this file, and also import other style files */
+/* PrimeIcons */
+@import "primeicons/primeicons.css";
+
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RTL Support for Arabic */
+html {
+  direction: rtl;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
+  margin: 0;
+  padding: 0;
+}
+
+/* PrimeNG RTL Adjustments */
+.p-component {
+  direction: rtl;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  text-align: right;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  text-align: right;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Card Styles */
+.p-card {
+  border-radius: 12px;
+}
+
+/* Button Styles */
+.p-button {
+  border-radius: 8px;
+}
+
+/* Toast RTL */
+.p-toast {
+  direction: rtl;
+}
+
+.p-toast-message-content {
+  flex-direction: row-reverse;
+}
