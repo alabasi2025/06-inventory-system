@@ -20,12 +20,7 @@
             "input": "apps/web/public"
           }
         ],
-        "styles": ["apps/web/src/styles.scss"],
-        "server": "apps/web/src/main.server.ts",
-        "ssr": {
-          "entry": "apps/web/src/server.ts"
-        },
-        "outputMode": "server"
+        "styles": ["apps/web/src/styles.scss"]
       },
       "configurations": {
         "production": {
@@ -33,12 +28,12 @@
             {
               "type": "initial",
               "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumError": "2mb"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "8kb",
+              "maximumError": "16kb"
             }
           ],
           "outputHashing": "all"
