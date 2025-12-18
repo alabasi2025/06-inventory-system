@@ -10,6 +10,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toolbar } from 'primeng/toolbar';
+import { TagModule } from 'primeng/tag';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ApiService } from '../../core/services/api.service';
 
@@ -18,62 +19,81 @@ import { ApiService } from '../../core/services/api.service';
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, Dialog,
-    InputText, Select, ToggleSwitch, Toast, ConfirmDialog, Toolbar
+    InputText, Select, ToggleSwitch, Toast, ConfirmDialog, Toolbar, TagModule
   ],
   providers: [MessageService, ConfirmationService],
   template: `
     <p-toast></p-toast>
-    <p-confirmdialog></p-confirmdialog>
+    <p-confirmdialog [style]="{width: '450px'}"></p-confirmdialog>
     
     <div class="page-container">
-      <p-toolbar styleClass="mb-4">
-        <ng-template #start>
-          <h2>التصنيفات</h2>
-        </ng-template>
-        <ng-template #end>
-          <button pButton label="إضافة تصنيف" icon="pi pi-plus" (click)="openNew()"></button>
-        </ng-template>
-      </p-toolbar>
+      <div class="card">
+        <p-toolbar styleClass="mb-4 gap-2">
+          <ng-template #start>
+            <h2 class="m-0">إدارة التصنيفات</h2>
+          </ng-template>
+          <ng-template #end>
+            <button pButton label="إضافة تصنيف" icon="pi pi-plus" class="p-button-success mr-2" (click)="openNew()"></button>
+          </ng-template>
+        </p-toolbar>
 
-      <p-table [value]="categories" [paginator]="true" [rows]="10" [loading]="loading"
-               [globalFilterFields]="['code', 'name', 'nameEn']" styleClass="p-datatable-striped">
-        <ng-template pTemplate="header">
-          <tr>
-            <th pSortableColumn="code">الكود <p-sortIcon field="code"></p-sortIcon></th>
-            <th pSortableColumn="name">الاسم <p-sortIcon field="name"></p-sortIcon></th>
-            <th>الاسم (إنجليزي)</th>
-            <th>التصنيف الأب</th>
-            <th>عدد الأصناف</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-category>
-          <tr>
-            <td>{{ category.code }}</td>
-            <td>{{ category.name }}</td>
-            <td>{{ category.nameEn || '-' }}</td>
-            <td>{{ category.parent?.name || '-' }}</td>
-            <td>{{ category._count?.items || 0 }}</td>
-            <td>
-              <span [class]="'status-badge ' + (category.isActive ? 'active' : 'inactive')">
-                {{ category.isActive ? 'فعال' : 'غير فعال' }}
+        <p-table #dt [value]="categories" [rows]="10" [paginator]="true" [loading]="loading"
+                 [globalFilterFields]="['code', 'name', 'nameEn']"
+                 [tableStyle]="{'min-width': '75rem'}"
+                 [rowHover]="true" dataKey="id"
+                 currentPageReportTemplate="عرض {first} إلى {last} من أصل {totalRecords} تصنيف"
+                 [showCurrentPageReport]="true">
+          
+          <ng-template pTemplate="caption">
+            <div class="flex align-items-center justify-content-between">
+              <span class="p-input-icon-left">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="بحث..." />
               </span>
-            </td>
-            <td>
-              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text" 
-                      (click)="editCategory(category)"></button>
-              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" 
-                      (click)="deleteCategory(category)"></button>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="text-center">لا توجد تصنيفات</td>
-          </tr>
-        </ng-template>
-      </p-table>
+            </div>
+          </ng-template>
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="code" style="min-width:10rem">الكود <p-sortIcon field="code"></p-sortIcon></th>
+              <th pSortableColumn="name" style="min-width:15rem">الاسم <p-sortIcon field="name"></p-sortIcon></th>
+              <th pSortableColumn="nameEn" style="min-width:15rem">الاسم (إنجليزي) <p-sortIcon field="nameEn"></p-sortIcon></th>
+              <th style="min-width:15rem">التصنيف الأب</th>
+              <th style="min-width:10rem">عدد الأصناف</th>
+              <th style="min-width:10rem">الحالة</th>
+              <th style="min-width:10rem">الإجراءات</th>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="body" let-category>
+            <tr>
+              <td><span class="font-bold">{{ category.code }}</span></td>
+              <td>{{ category.name }}</td>
+              <td>{{ category.nameEn || '-' }}</td>
+              <td>{{ category.parent?.name || '-' }}</td>
+              <td>
+                <p-tag [value]="category._count?.items || 0" severity="info" [rounded]="true"></p-tag>
+              </td>
+              <td>
+                <p-tag [value]="category.isActive ? 'فعال' : 'غير فعال'" 
+                       [severity]="category.isActive ? 'success' : 'danger'"></p-tag>
+              </td>
+              <td>
+                <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" 
+                        (click)="editCategory(category)"></button>
+                <button pButton icon="pi pi-trash" class="p-button-rounded p-button-warning" 
+                        (click)="deleteCategory(category)"></button>
+              </td>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center p-4">لا توجد تصنيفات مسجلة.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </div>
 
     <p-dialog [(visible)]="categoryDialog" [header]="editMode ? 'تعديل تصنيف' : 'إضافة تصنيف'" 
@@ -81,11 +101,13 @@ import { ApiService } from '../../core/services/api.service';
       <ng-template pTemplate="content">
         <div class="field">
           <label for="code">الكود *</label>
-          <input pInputText id="code" [(ngModel)]="category.code" required [disabled]="editMode" />
+          <input pInputText id="code" [(ngModel)]="category.code" required [disabled]="editMode" autofocus />
+          <small class="p-error" *ngIf="!category.code">الكود مطلوب</small>
         </div>
         <div class="field">
           <label for="name">الاسم (عربي) *</label>
           <input pInputText id="name" [(ngModel)]="category.name" required />
+          <small class="p-error" *ngIf="!category.name">الاسم مطلوب</small>
         </div>
         <div class="field">
           <label for="nameEn">الاسم (إنجليزي)</label>
@@ -95,37 +117,49 @@ import { ApiService } from '../../core/services/api.service';
           <label for="parent">التصنيف الأب</label>
           <p-select [options]="parentCategories" [(ngModel)]="category.parentId" 
                     optionLabel="name" optionValue="id" [showClear]="true"
-                    placeholder="اختر التصنيف الأب"></p-select>
+                    placeholder="اختر التصنيف الأب" appendTo="body"></p-select>
         </div>
         <div class="field">
           <label for="description">الوصف</label>
-          <input pInputText id="description" [(ngModel)]="category.description" />
+          <textarea pInputText id="description" [(ngModel)]="category.description" rows="3" style="width:100%"></textarea>
         </div>
-        <div class="field-checkbox">
+        <div class="field-checkbox flex align-items-center gap-2">
           <p-toggleswitch [(ngModel)]="category.isActive"></p-toggleswitch>
-          <label>فعال</label>
+          <label class="m-0">فعال</label>
         </div>
       </ng-template>
+      
       <ng-template pTemplate="footer">
         <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
-        <button pButton label="حفظ" icon="pi pi-check" (click)="saveCategory()"></button>
+        <button pButton label="حفظ" icon="pi pi-check" class="p-button-text" (click)="saveCategory()"></button>
       </ng-template>
     </p-dialog>
   `,
   styles: [`
-    .page-container { padding: 1rem; }
-    .field { margin-bottom: 1rem; }
-    .field label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-    .field-checkbox { display: flex; align-items: center; gap: 0.5rem; }
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 1rem;
-      font-size: 0.875rem;
+    :host ::ng-deep .p-dialog .p-button {
+      min-width: 6rem;
     }
-    .status-badge.active { background: #dcfce7; color: #166534; }
-    .status-badge.inactive { background: #fee2e2; color: #991b1b; }
-    .text-center { text-align: center; padding: 2rem; color: #64748b; }
-    h2 { margin: 0; color: #1e3a5f; }
+    
+    .field { margin-bottom: 1.5rem; }
+    
+    .p-input-icon-left {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .p-input-icon-left > i {
+      position: absolute;
+      top: 50%;
+      left: 0.75rem;
+      margin-top: -0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .p-input-icon-left > input {
+      padding-left: 2.5rem;
+      width: 100%;
+    }
   `]
 })
 export class CategoriesComponent implements OnInit {
@@ -180,6 +214,8 @@ export class CategoriesComponent implements OnInit {
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'نعم',
       rejectLabel: 'لا',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text',
       accept: () => {
         this.api.deleteCategory(category.id).subscribe({
           next: () => {

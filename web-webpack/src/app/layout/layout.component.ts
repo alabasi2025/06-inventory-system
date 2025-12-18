@@ -5,30 +5,49 @@ import { PanelMenuModule } from 'primeng/panelmenu';
 import { MenuItem } from 'primeng/api';
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
+import { AvatarModule } from 'primeng/avatar';
+import { BadgeModule } from 'primeng/badge';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, PanelMenuModule, DrawerModule, ButtonModule],
+  imports: [CommonModule, RouterModule, PanelMenuModule, DrawerModule, ButtonModule, AvatarModule, BadgeModule],
   template: `
     <div class="layout-wrapper">
       <aside class="layout-sidebar">
         <div class="logo">
-          <i class="pi pi-box"></i>
-          <span>نظام المخزون</span>
+          <div class="logo-icon">
+            <i class="pi pi-box"></i>
+          </div>
+          <div class="logo-text">
+            <span class="app-name">نظام المخزون</span>
+            <span class="app-version">v1.0</span>
+          </div>
         </div>
+        
         <div class="menu-container">
           <p-panelMenu [model]="menuItems" styleClass="layout-menu"></p-panelMenu>
+        </div>
+
+        <div class="user-profile">
+          <p-avatar icon="pi pi-user" styleClass="mr-2" shape="circle" [style]="{'background-color': '#3b82f6', 'color': '#ffffff'}"></p-avatar>
+          <div class="user-info">
+            <span class="user-name">المسؤول</span>
+            <span class="user-role">مدير النظام</span>
+          </div>
         </div>
       </aside>
       
       <div class="layout-main">
         <header class="topbar">
           <div class="topbar-start">
-            <span class="welcome-text">مرحباً بك في نظام إدارة المخزون</span>
+            <h1 class="page-title">مرحباً بك في نظام إدارة المخزون</h1>
           </div>
           <div class="topbar-end">
-            <p-button icon="pi pi-user" styleClass="p-button-rounded p-button-text"></p-button>
+            <button pButton icon="pi pi-bell" class="p-button-rounded p-button-text p-button-secondary notification-btn">
+              <p-badge value="2" severity="danger"></p-badge>
+            </button>
+            <button pButton icon="pi pi-cog" class="p-button-rounded p-button-text p-button-secondary"></button>
           </div>
         </header>
         
@@ -42,67 +61,142 @@ import { ButtonModule } from 'primeng/button';
     .layout-wrapper {
       display: flex;
       min-height: 100vh;
-      background-color: #f8f9fa;
+      background-color: var(--surface-ground);
     }
 
     .layout-sidebar {
       width: 280px;
-      background: #1e3a5f;
-      color: white;
+      background: #ffffff;
+      border-left: 1px solid var(--surface-border);
       display: flex;
       flex-direction: column;
       position: fixed;
       top: 0;
       bottom: 0;
-      right: 0; /* RTL support */
+      right: 0;
       z-index: 1000;
-      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transition: all 0.3s;
     }
 
     .layout-main {
       flex: 1;
-      margin-right: 280px; /* RTL support */
+      margin-right: 280px;
       display: flex;
       flex-direction: column;
       min-width: 0;
+      transition: margin-right 0.3s;
     }
 
     .logo {
-      height: 70px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid var(--surface-border);
+      background: #ffffff;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary-color);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.75rem;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.1);
+      margin-left: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
     }
 
-    .logo i {
-      font-size: 1.75rem;
-      color: #60a5fa;
+    .logo-icon i {
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .app-version {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
     }
 
     .menu-container {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem 0;
+      padding: 1.5rem 1rem;
+    }
+
+    .user-profile {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      margin-right: 0.75rem;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+
+    .user-role {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
     }
 
     .topbar {
-      height: 70px;
-      background: white;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      border-bottom: 1px solid var(--surface-border);
+      position: sticky;
+      top: 0;
+      z-index: 999;
     }
 
-    .welcome-text {
-      color: #475569;
-      font-weight: 500;
+    .page-title {
+      font-size: 1.25rem;
+      margin: 0;
+      color: var(--text-color);
+    }
+
+    .topbar-end {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .notification-btn {
+      position: relative;
+    }
+
+    .notification-btn ::ng-deep .p-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      line-height: 1.25rem;
     }
 
     .layout-content {
@@ -115,21 +209,25 @@ import { ButtonModule } from 'primeng/button';
     :host ::ng-deep {
       .p-panelmenu {
         width: 100%;
+        gap: 0.5rem;
+        display: flex;
+        flex-direction: column;
       }
       
       .p-panelmenu .p-panelmenu-header-action {
         background: transparent;
-        color: #e2e8f0;
+        color: var(--text-secondary);
         border: none;
-        border-radius: 0;
-        padding: 1rem 1.5rem;
-        font-weight: 500;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
         transition: all 0.2s;
+        margin-bottom: 0.25rem;
       }
 
       .p-panelmenu .p-panelmenu-header-action:hover {
-        background: rgba(255,255,255,0.05);
-        color: white;
+        background: #f1f5f9;
+        color: var(--primary-color);
       }
 
       .p-panelmenu .p-panelmenu-header-action:focus {
@@ -137,24 +235,34 @@ import { ButtonModule } from 'primeng/button';
       }
 
       .p-panelmenu .p-panelmenu-content {
-        background: rgba(0,0,0,0.1);
+        background: transparent;
         border: none;
-        padding: 0;
+        padding: 0 0 0 1rem;
+        margin-top: 0.25rem;
       }
 
       .p-panelmenu .p-menuitem-link {
-        padding: 0.75rem 2rem 0.75rem 1.5rem;
-        color: #cbd5e1;
+        padding: 0.6rem 1rem;
+        color: var(--text-secondary);
+        border-radius: 8px;
+        margin-bottom: 0.25rem;
+        transition: all 0.2s;
       }
 
       .p-panelmenu .p-menuitem-link:hover {
-        background: rgba(255,255,255,0.05);
-        color: white;
+        background: #eff6ff;
+        color: var(--primary-color);
+      }
+
+      .p-panelmenu .p-menuitem-link.router-link-active {
+        background: #eff6ff;
+        color: var(--primary-color);
+        font-weight: 700;
       }
 
       .p-panelmenu .p-menuitem-icon {
-        color: #94a3b8;
-        margin-left: 0.5rem;
+        color: inherit;
+        margin-left: 0.75rem;
         margin-right: 0;
       }
 
@@ -162,6 +270,7 @@ import { ButtonModule } from 'primeng/button';
         order: -1;
         margin-right: auto;
         margin-left: 0;
+        font-size: 0.8rem;
       }
     }
   `]
