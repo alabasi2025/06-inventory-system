@@ -2,7 +2,9 @@
   "name": "@inventory-system/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "prisma:seed": "npx ts-node prisma/seed.ts"
+  },
   "private": true,
   "devDependencies": {
     "@angular-devkit/build-angular": "^20.3.13",

@@ -12,6 +12,7 @@
       "options": {
         "outputPath": "dist/apps/web",
         "browser": "apps/web/src/main.ts",
+        "polyfills": ["zone.js"],
         "tsConfig": "apps/web/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -54,7 +55,8 @@
           "buildTarget": "web:build:production"
         },
         "development": {
-          "buildTarget": "web:build:development"
+          "buildTarget": "web:build:development",
+          "allowedHosts": true
         }
       },
       "defaultConfiguration": "development"

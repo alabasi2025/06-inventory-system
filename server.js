@@ -3,7 +3,7 @@ const http = require('http');
 const path = require('path');
 
 const app = express();
-const PORT = 4200;
+const PORT = 4206;
 const API_HOST = 'localhost';
 const API_PORT = 3006;
 

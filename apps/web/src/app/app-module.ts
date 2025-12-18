@@ -1,6 +1,6 @@
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule, provideAnimations } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
@@ -17,6 +17,7 @@ import { appRoutes } from './app.routes';
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideAnimations(),
     provideHttpClient(withFetch()),
     providePrimeNG({
       theme: {
